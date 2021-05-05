@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1003557897808",
+    "project_id": "sosmap-f80c2",
+    "storage_bucket": "sosmap-f80c2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1003557897808:android:62bb228160fc331efaf355",
+        "android_client_info": {
+          "package_name": "com.hungs20.sosmap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1003557897808-50j68o2kee7lvqdq0aae9q15m2oanmbs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hungs20.sosmap",
+            "certificate_hash": "c71f74ae691fd189eeec80f5bc672593f6a9d833"
+          }
+        },
+        {
+          "client_id": "1003557897808-ce66l3lsg1o8ogjb0ohamus3tj5s5pa7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4lXO9_yeuYKakhE4lWX9uLzxKhn_BUIw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1003557897808-ce66l3lsg1o8ogjb0ohamus3tj5s5pa7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1003557897808-i1orll2j7g21of4grik1irsp9di87c33.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.hungs20.sosmap"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

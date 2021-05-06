@@ -29,6 +29,7 @@ dependencies:
   weather_icons: ^2.0.1
   connectivity: ^0.4.8+1
   fluttertoast: ^3.1.0
+  flutter_speed_dial: ^3.0.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -46,6 +47,18 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/default.png
+    - assets/symbols/custom-icon.png
+    - assets/symbols/origin.png
+    - assets/symbols/destination.png
+    - assets/symbols/2.0x/custom-icon.png
+    - assets/symbols/2.0x/origin.png
+    - assets/symbols/2.0x/destination.png
+    - assets/symbols/3.0x/custom-icon.png
+    - assets/symbols/3.0x/origin.png
+    - assets/symbols/3.0x/destination.png
+    - assets/geojson/ne_10m_ports.geojson
+    - assets/geojson/line-samples.geojson
+    - assets/geojson/polygon-samples.geojson
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

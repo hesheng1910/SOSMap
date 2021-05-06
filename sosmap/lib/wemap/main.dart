@@ -16,6 +16,7 @@ import 'scrolling_map.dart';
 import 'route.dart';
 import 'search.dart';
 import 'simpleDirection.dart';
+import 'package:wemapgl/wemapgl.dart' as WEMAP;
 
 final List<ePage> _allPages = <ePage>[
   MapUiPage(),

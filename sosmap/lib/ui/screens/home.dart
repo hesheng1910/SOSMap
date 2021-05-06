@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/state.dart';
+import 'package:sosmap/ui/screens/map.dart';
 import 'package:sosmap/ui/screens/profile.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
-import 'package:sosmap/wemap/main.dart';
+import 'package:sosmap/wemap/route.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
@@ -22,11 +23,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static List<Widget> _widgetOptions = <Widget>[
-    MapsDemo(),
-    Text(
-      'Index 1: Business',
-      style: optionStyle,
-    ),
+    FullMapPage(),
+    RoutePage(),
     ProfileScreen(),
   ];
 

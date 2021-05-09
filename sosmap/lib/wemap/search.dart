@@ -4,7 +4,7 @@ import 'dart:async';
 
 import 'ePage.dart';
 
-class SearchPage extends ePage {
+class SearchPage extends EPage {
   SearchPage() : super(const Icon(Icons.search), 'Search page');
 
   @override

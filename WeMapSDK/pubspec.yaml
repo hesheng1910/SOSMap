@@ -2,12 +2,10 @@ name: wemapgl
 description: WeMap Flutter SDK
 version: 0.1.0
 homepage: https://github.com/WEMAP-Official/WeMap-Flutter-SDK
-
+publish_to: none
 dependencies:
   flutter:
     sdk: flutter
-  wemapgl_platform_interface:
-    path: ./wemapgl_platform_interface
     
   fluttertoast: ^3.1.0
   url_launcher: ^5.4.2
@@ -25,6 +23,8 @@ dependencies:
   snaplist: ^0.1.8
   location: ^2.5.4
 
+  wemapgl_platform_interface:
+    path: ./wemapgl_platform_interface
 flutter:
   plugin:
     platforms:
@@ -37,4 +37,4 @@ flutter:
 environment:
   sdk: ">=2.1.0 <3.0.0"
   # Flutter versions prior to 1.10 did not support the flutter.plugin.platforms map.
-  flutter: ">=1.10.0 <2.0.0"
+  #flutter: ">=1.10.0 <2.0.0"

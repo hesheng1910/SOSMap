@@ -1,13 +1,15 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:sosmap/models/request.dart';
+import 'package:sosmap/models/user.dart';
+import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/wemap/ePage.dart';
 import 'package:wemapgl/wemapgl.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-class FullMapPage extends ePage {
+class FullMapPage extends EPage {
   FullMapPage() : super(const Icon(Icons.map), 'Full screen map');
 
   @override
@@ -20,47 +22,211 @@ class FullMap extends StatefulWidget {
   const FullMap();
 
   @override
-  State createState() => FullMapState();
+  State<StatefulWidget> createState() => FullMapState();
 }
 
 class FullMapState extends State<FullMap> {
+  FullMapState();
+
+  static final CameraPosition _kInitialPosition = const CameraPosition(
+    target: LatLng(21.038282, 105.782885),
+    zoom: 11.0,
+  );
+
   WeMapController mapController;
-  int searchType = 1; //Type of search bar
-  String searchInfoPlace = "Tìm kiếm ở đây"; //Hint text for InfoBar
-  String searchPlaceName;
+  CameraPosition _position = _kInitialPosition;
+  bool _isMoving = false;
+  bool _compassEnabled = true;
+  CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
+  MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
+  String _styleString = WeMapStyles.WEMAP_VECTOR_STYLE;
+  bool _rotateGesturesEnabled = true;
+  bool _scrollGesturesEnabled = true;
+  bool _tiltGesturesEnabled = true;
+  bool _zoomGesturesEnabled = true;
+  bool _myLocationEnabled = true;
+  MyLocationTrackingMode _myLocationTrackingMode =
+      MyLocationTrackingMode.Tracking;
+
   LatLng myLatLng = LatLng(21.038282, 105.782885);
   bool reverse = true;
   WeMapPlace place;
 
-  void _onMapCreated(WeMapController controller) {
+  int _symbolCount = 0;
+  Symbol _selectedSymbol;
+
+  List<RequestModel> listUser = [
+    RequestModel(
+        user: UserModel(firstName: 'User1', tel: '123456', rate: 2.6),
+        lat: 21.038282,
+        lng: 105.782885,
+        reason: "Tai nạn",
+        message: "Tôi đang bị tai nạn, hãy đến giúp tôi",
+        createAt: DateTime(2021, 5, 8, 17, 30)),
+    RequestModel(
+        user: UserModel(firstName: 'User2', tel: '0886151242'),
+        lat: 21.138282,
+        lng: 105.982885,
+        reason: "Hỏng xe",
+        message: "Tôi đang bị hỏng xe, hãy đến giúp tôi",
+        createAt: DateTime(2021, 5, 9, 17, 30)),
+  ];
+
+  void onMapCreated(WeMapController controller) {
     mapController = controller;
+    listUser.forEach((user) {
+      _add(LatLng(user.lat, user.lng), user.toJson());
+    });
+    mapController.addListener(_onMapChanged);
+    mapController.onSymbolTapped.add(_onSymbolTapped);
+    _extractMapInfo();
+  }
+
+  @override
+  void dispose() {
+    mapController.removeListener(_onMapChanged);
+    mapController?.onSymbolTapped?.remove(_onSymbolTapped);
+    super.dispose();
+  }
+
+  void _onMapChanged() {
+    setState(() {
+      _extractMapInfo();
+    });
+  }
+
+  void _extractMapInfo() {
+    _position = mapController.cameraPosition;
+    _isMoving = mapController.isCameraMoving;
+  }
+
+  void _onSymbolTapped(Symbol symbol) {
+    if (_selectedSymbol != null) {
+      _updateSelectedSymbol(
+        const SymbolOptions(iconSize: 1.0),
+      );
+    }
+    setState(() {
+      _selectedSymbol = symbol;
+    });
+    _updateSelectedSymbol(
+      SymbolOptions(iconSize: 1.4),
+    );
+  }
+
+  void _onUnSelectedSymbol() {
+    if (_selectedSymbol != null)
+      _updateSelectedSymbol(
+        const SymbolOptions(iconSize: 1.0),
+      );
+    setState(() {
+      _selectedSymbol = null;
+    });
+  }
+
+  void _updateSelectedSymbol(SymbolOptions changes) {
+    mapController.updateSymbol(_selectedSymbol, changes);
+  }
+
+  Future<void> _add(LatLng latlng, Map<String, dynamic> requestData) async {
+    await mapController.addSymbol(
+        SymbolOptions(
+          geometry: latlng,
+          iconImage: "assets/symbols/help.png",
+        ),
+        requestData);
+    setState(() {
+      _symbolCount += 1;
+    });
+  }
+
+  void _remove() {
+    mapController.removeSymbol(_selectedSymbol);
+    setState(() {
+      _selectedSymbol = null;
+      _symbolCount -= 1;
+    });
+  }
+
+  void _changePosition() {
+    final LatLng current = _selectedSymbol.options.geometry;
+    final Offset offset = Offset(
+      myLatLng.latitude - current.latitude,
+      myLatLng.longitude - current.longitude,
+    );
+    _updateSelectedSymbol(
+      SymbolOptions(
+        geometry: LatLng(
+          myLatLng.latitude + offset.dy,
+          myLatLng.longitude + offset.dx,
+        ),
+      ),
+    );
+  }
+
+  void _getCurrentLocation() async {
+    LatLng myLocation = await mapController.requestMyLocationLatLng();
+    mapController.moveCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(
+        target: myLocation,
+        zoom: 14.0,
+      ),
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final WeMap weMap = WeMap(
+        onMapCreated: onMapCreated,
+        initialCameraPosition: _kInitialPosition,
+        trackCameraPosition: true,
+        compassEnabled: _compassEnabled,
+        cameraTargetBounds: _cameraTargetBounds,
+        minMaxZoomPreference: _minMaxZoomPreference,
+        styleString: _styleString,
+        rotateGesturesEnabled: _rotateGesturesEnabled,
+        scrollGesturesEnabled: _scrollGesturesEnabled,
+        tiltGesturesEnabled: _tiltGesturesEnabled,
+        zoomGesturesEnabled: _zoomGesturesEnabled,
+        myLocationEnabled: _myLocationEnabled,
+        myLocationTrackingMode: _myLocationTrackingMode,
+        myLocationRenderMode: MyLocationRenderMode.GPS,
+        reverse: true,
+        onPlaceCardClose: () => print("close card"),
+        onMapClick: (point, latlng, place) {
+          print(point);
+          _onUnSelectedSymbol();
+        },
+        onCameraTrackingDismissed: () {
+          this.setState(() {
+            _myLocationTrackingMode = MyLocationTrackingMode.None;
+          });
+        });
+
     return new Scaffold(
       body: Stack(
         children: <Widget>[
-          WeMap(
-            onMapClick: (point, latlng, _place) async {
-              place = await _place;
-            },
-            onPlaceCardClose: () {
-              // print("Place Card closed");
-            },
-            reverse: true,
-            onMapCreated: _onMapCreated,
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(21.036029, 105.782950),
-              zoom: 16.0,
+          weMap,
+          if (_selectedSymbol != null)
+            new Container(
+              alignment: Alignment.center,
+              child: CardInfomation(
+                requestModel: RequestModel.fromJson(_selectedSymbol.data),
+                onCloseBtn: _onUnSelectedSymbol,
+                onOpenMapBtn: () {
+                  setState(() {
+                    listUser[0].user.rate = Random().nextDouble() * 5;
+                  });
+                },
+                onConfirmBtn: () => {},
+              ),
             ),
-            destinationIcon: "assets/symbols/destination.png",
-          ),
           WeMapSearchBar(
             location: myLatLng,
             onSelected: (_place) {
               setState(() {
                 place = _place;
+                print(_place.placeName);
               });
               mapController.moveCamera(
                 CameraUpdate.newCameraPosition(
@@ -70,12 +236,12 @@ class FullMapState extends State<FullMap> {
                   ),
                 ),
               );
-              mapController.showPlaceCard(place);
+              mapController.showPlaceCard?.call(place);
             },
             onClearInput: () {
               setState(() {
                 place = null;
-                mapController.showPlaceCard(place);
+                //mapController.showPlaceCard(place);
               });
             },
           ),
@@ -143,7 +309,7 @@ class FullMapState extends State<FullMap> {
             backgroundColor: Colors.orange,
             label: 'Cập nhật vị trí',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => print('SECOND CHILD'),
+            onTap: () => _getCurrentLocation(),
             onLongPress: () => print('SECOND CHILD LONG PRESS'),
           ),
         ],

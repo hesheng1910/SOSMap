@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:location/location.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/ui/screens/map.dart';
 import 'package:sosmap/ui/screens/profile.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
+import 'package:sosmap/wemap/main.dart';
+import 'package:sosmap/wemap/place_symbol.dart';
 import 'package:sosmap/wemap/route.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,15 +23,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   int _selectedIndex = 0;
-  static const TextStyle optionStyle =
-      TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
+
   static List<Widget> _widgetOptions = <Widget>[
     FullMapPage(),
-    RoutePage(),
+    MapsDemo(),
     ProfileScreen(),
   ];
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
+    final location = Location();
+    final hasPermissions = await location.hasPermission();
+    if (hasPermissions != PermissionStatus.GRANTED) {
+      if (index == 0 || index == 1) await location.requestPermission();
+    }
+
     setState(() {
       _selectedIndex = index;
     });
@@ -77,28 +85,33 @@ class _HomeScreenState extends State<HomeScreen> {
       return Scaffold(
         backgroundColor: Colors.white,
         body: LoadingScreen(
-            child: Center(
-              child: _widgetOptions.elementAt(_selectedIndex),
-            ),
-            inAsyncCall: _loadingVisible),
+          child: IndexedStack(
+            index: _selectedIndex,
+            children: _widgetOptions,
+          ),
+          inAsyncCall: _loadingVisible,
+        ),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
+              icon: Icon(Icons.map),
+              label: 'Bản đồ',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.business),
-              label: 'Business',
+              icon: Icon(Icons.history),
+              label: 'Lịch sử',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'School',
+              icon: Icon(Icons.person),
+              label: 'Hồ sơ',
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.amber[800],
+          selectedItemColor: Colors.white,
+          unselectedItemColor: Colors.black,
+          selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
           onTap: _onItemTapped,
+          backgroundColor: Colors.green,
         ),
       );
     }

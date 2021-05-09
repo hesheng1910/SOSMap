@@ -137,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ),
     );
 
-    final signInLabel = FlatButton(
+    final signInLabel = TextButton(
       child: Text(
         'Have an Account? Sign In.',
         style: TextStyle(color: Colors.black54),

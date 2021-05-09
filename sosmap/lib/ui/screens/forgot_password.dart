@@ -71,7 +71,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
 
-    final signInLabel = FlatButton(
+    final signInLabel = TextButton(
       child: Text(
         'Sign In',
         style: TextStyle(color: Colors.black54),

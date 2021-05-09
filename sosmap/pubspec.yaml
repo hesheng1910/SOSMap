@@ -10,7 +10,7 @@ description: Flutter firebase auth example.
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.0.0-dev.68.0 <3.0.0'
+  sdk: '>=2.2.2 <3.0.0'
 
 dependencies:
   flutter:
@@ -48,12 +48,15 @@ flutter:
   assets:
     - assets/images/default.png
     - assets/symbols/custom-icon.png
+    - assets/symbols/help.png
     - assets/symbols/origin.png
     - assets/symbols/destination.png
     - assets/symbols/2.0x/custom-icon.png
+    - assets/symbols/2.0x/help.png
     - assets/symbols/2.0x/origin.png
     - assets/symbols/2.0x/destination.png
     - assets/symbols/3.0x/custom-icon.png
+    - assets/symbols/3.0x/help.png
     - assets/symbols/3.0x/origin.png
     - assets/symbols/3.0x/destination.png
     - assets/geojson/ne_10m_ports.geojson

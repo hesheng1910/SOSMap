@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:wemapgl/wemapgl.dart';
 
@@ -10,7 +8,7 @@ final LatLngBounds hanoiBounds = LatLngBounds(
   northeast: const LatLng(21.094369, 105.883025),
 );
 
-class MapUiPage extends ePage {
+class MapUiPage extends EPage {
   MapUiPage() : super(const Icon(Icons.map), 'User interface');
   @override
   Widget build(BuildContext context) {
@@ -78,7 +76,7 @@ class MapUiBodyState extends State<MapUiBody> {
     final MyLocationTrackingMode nextType = MyLocationTrackingMode.values[
         (_myLocationTrackingMode.index + 1) %
             MyLocationTrackingMode.values.length];
-    return FlatButton(
+    return TextButton(
       child: Text('change to $nextType'),
       onPressed: () {
         setState(() {
@@ -89,7 +87,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _compassToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_compassEnabled ? 'disable' : 'enable'} compasss'),
       onPressed: () {
         setState(() {
@@ -100,7 +98,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _latLngBoundsToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text(
         _cameraTargetBounds.bounds == null
             ? 'bound camera target'
@@ -117,7 +115,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _zoomBoundsToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text(_minMaxZoomPreference.minZoom == null
           ? 'bound zoom'
           : 'release zoom'),
@@ -132,7 +130,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _setStyleToSatellite() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_satelliteEnabled ? 'Remove' : 'Add'} Satellite Layer'),
       onPressed: () {
         setState(() {
@@ -149,7 +147,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _addTrafficLayer() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_trafficEnabled ? 'Remove' : 'Add'} Traffic Layer'),
       onPressed: () {
         setState(() {
@@ -166,17 +164,15 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _addCustomWMSLayer() {
-    return FlatButton(
+    return TextButton(
       child:
           Text('${_customWMSLayerEnabled ? 'Remove' : 'Add'} Custom WMS Layer'),
       onPressed: () {
         setState(() {
           if (_customWMSLayerEnabled == false) {
             _customWMSLayerEnabled = true;
-            mapController.addWMSLayer(
-                "custom-layer",
-                "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
-                256);
+            mapController.addWMSLayer("custom-layer",
+                "https://a.tile.opentopomap.org/{z}/{x}/{y}.png", 256);
           } else {
             _customWMSLayerEnabled = false;
             mapController.removeWMSLayer("custom-layer");
@@ -187,7 +183,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _rotateToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_rotateGesturesEnabled ? 'disable' : 'enable'} rotate'),
       onPressed: () {
         setState(() {
@@ -198,7 +194,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _scrollToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_scrollGesturesEnabled ? 'disable' : 'enable'} scroll'),
       onPressed: () {
         setState(() {
@@ -209,7 +205,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _tiltToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_tiltGesturesEnabled ? 'disable' : 'enable'} tilt'),
       onPressed: () {
         setState(() {
@@ -220,7 +216,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _zoomToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_zoomGesturesEnabled ? 'disable' : 'enable'} zoom'),
       onPressed: () {
         setState(() {
@@ -231,7 +227,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _myLocationToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_myLocationEnabled ? 'disable' : 'enable'} my location'),
       onPressed: () {
         setState(() {
@@ -242,7 +238,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _telemetryToggler() {
-    return FlatButton(
+    return TextButton(
       child: Text('${_telemetryEnabled ? 'disable' : 'enable'} telemetry'),
       onPressed: () {
         setState(() {
@@ -254,7 +250,7 @@ class MapUiBodyState extends State<MapUiBody> {
   }
 
   Widget _visibleRegionGetter() {
-    return FlatButton(
+    return TextButton(
       child: Text('get currently visible region'),
       onPressed: () async {
         var result = await mapController.getVisibleRegion();

@@ -7,8 +7,9 @@ import 'package:wemapgl/wemapgl.dart';
 
 import 'ePage.dart';
 
-class PlaceGeoJSONPage extends ePage {
-  PlaceGeoJSONPage() : super(const Icon(Icons.add_location_alt), 'Place GeoJSON');
+class PlaceGeoJSONPage extends EPage {
+  PlaceGeoJSONPage()
+      : super(const Icon(Icons.add_location_alt), 'Place GeoJSON');
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,8 @@ class PlaceGeoJSONBodyState extends State<PlaceGeoJSONBody> {
 
   static final LatLng center = const LatLng(21.86711, 106.1947171);
   final String _multiPointString = "assets/geojson/ne_10m_ports.geojson";
-  final String _multiPolygonURL = "https://wemap-project.github.io/WeMap-Web-SDK-Release/demo/data/data.geojson";
+  final String _multiPolygonURL =
+      "https://wemap-project.github.io/WeMap-Web-SDK-Release/demo/data/data.geojson";
 
   WeMapController controller;
 
@@ -36,8 +38,7 @@ class PlaceGeoJSONBodyState extends State<PlaceGeoJSONBody> {
     this.controller = controller;
   }
 
-  void _onStyleLoaded() {
-  }
+  void _onStyleLoaded() {}
 
   /// Adds an asset image to the currently displayed style
   Future<void> addImageFromAsset(String name, String assetName) async {
@@ -52,37 +53,28 @@ class PlaceGeoJSONBodyState extends State<PlaceGeoJSONBody> {
   }
 
   void _addPoint() async {
-    controller.addGeoJSON(
-      GeoJSONOptions(
+    controller.addGeoJSON(GeoJSONOptions(
         geojson: _multiPointString,
         type: GeoJSONOptions.POINT,
-        circleColor: "#FF0000"
-      )
-    );
+        circleColor: "#FF0000"));
   }
 
   void _addPolyline() {
-    controller.addGeoJSON(
-      GeoJSONOptions(
-        geojson: _multiPolygonURL,
-        type: GeoJSONOptions.POLYLINE,
-        lineColor: "#ff0000",
-        lineWidth: 2,
-        lineOpacity: 1,
-      )
-    );
+    controller.addGeoJSON(GeoJSONOptions(
+      geojson: _multiPolygonURL,
+      type: GeoJSONOptions.POLYLINE,
+      lineColor: "#ff0000",
+      lineWidth: 2,
+      lineOpacity: 1,
+    ));
   }
-  
+
   void _addPolygon() {
-    
-    controller.addGeoJSON(
-      GeoJSONOptions(
+    controller.addGeoJSON(GeoJSONOptions(
         geojson: _multiPolygonURL,
         type: GeoJSONOptions.POLYGOL,
-        fillColor: "#FF0000", 
-        fillOutlineColor: "#FF0000"
-      )
-    );
+        fillColor: "#FF0000",
+        fillOutlineColor: "#FF0000"));
   }
 
   @override
@@ -114,15 +106,15 @@ class PlaceGeoJSONBodyState extends State<PlaceGeoJSONBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('add Point'),
                           onPressed: _addPoint,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('add Polyline'),
                           onPressed: _addPolyline,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('add Polygon'),
                           onPressed: _addPolygon,
                         ),

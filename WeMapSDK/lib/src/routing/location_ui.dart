@@ -151,7 +151,7 @@ class ChooseLocationState extends State<ChooseLocation>
               height: 45,
               decoration: _containerDecoration(),
               padding: EdgeInsets.only(bottom: 0),
-              child: FlatButton(
+              child: TextButton(
                 onPressed: () async {
                   setState(() {
                     Navigator.push(
@@ -239,7 +239,7 @@ class ChooseLocationState extends State<ChooseLocation>
             padding: EdgeInsets.only(top: 0),
             height: 45,
             decoration: _containerDecoration(),
-            child: FlatButton(
+            child: TextButton(
               onPressed: () {
                 setState(() {
                   Navigator.push(

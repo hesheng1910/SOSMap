@@ -7,39 +7,39 @@ part of wemapgl;
 typedef void MapCreatedCallback(WeMapController controller);
 
 class WeMap extends StatefulWidget {
-  WeMap({
-    @required this.initialCameraPosition,
-    this.onMapCreated,
-    this.onStyleLoadedCallback,
-    this.gestureRecognizers,
-    this.compassEnabled = true,
-    this.cameraTargetBounds = CameraTargetBounds.unbounded,
-    this.styleString,
-    this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
-    this.rotateGesturesEnabled = true,
-    this.scrollGesturesEnabled = true,
-    this.zoomGesturesEnabled = true,
-    this.tiltGesturesEnabled = true,
-    this.trackCameraPosition = false,
-    this.myLocationEnabled = false,
-    this.myLocationTrackingMode = MyLocationTrackingMode.None,
-    this.myLocationRenderMode = MyLocationRenderMode.COMPASS,
-    this.logoViewMargins = const Point(0, 0),
-    this.compassViewPosition,
-    this.compassViewMargins,
-    this.attributionButtonMargins,
-    this.onMapClick,
-    this.onUserLocationUpdated,
-    this.onMapLongClick,
-    this.onCameraTrackingDismissed,
-    this.onCameraTrackingChanged,
-    this.onCameraIdle,
-    this.onMapIdle,
-    this.reverse = false,
-    this.showReverseClearButton = true,
-    this.onPlaceCardClose,
-    this.destinationIcon
-  }) : assert(initialCameraPosition != null);
+  WeMap(
+      {@required this.initialCameraPosition,
+      this.onMapCreated,
+      this.onStyleLoadedCallback,
+      this.gestureRecognizers,
+      this.compassEnabled = true,
+      this.cameraTargetBounds = CameraTargetBounds.unbounded,
+      this.styleString,
+      this.minMaxZoomPreference = MinMaxZoomPreference.unbounded,
+      this.rotateGesturesEnabled = true,
+      this.scrollGesturesEnabled = true,
+      this.zoomGesturesEnabled = true,
+      this.tiltGesturesEnabled = true,
+      this.trackCameraPosition = false,
+      this.myLocationEnabled = false,
+      this.myLocationTrackingMode = MyLocationTrackingMode.None,
+      this.myLocationRenderMode = MyLocationRenderMode.COMPASS,
+      this.logoViewMargins = const Point(0, 0),
+      this.compassViewPosition,
+      this.compassViewMargins,
+      this.attributionButtonMargins,
+      this.onMapClick,
+      this.onUserLocationUpdated,
+      this.onMapLongClick,
+      this.onCameraTrackingDismissed,
+      this.onCameraTrackingChanged,
+      this.onCameraIdle,
+      this.onMapIdle,
+      this.reverse = true,
+      this.showReverseClearButton = true,
+      this.onPlaceCardClose,
+      this.destinationIcon})
+      : assert(initialCameraPosition != null);
 
   /// default is false,
   /// if true the Place Card at the bottom will be called.
@@ -174,8 +174,7 @@ class WeMap extends StatefulWidget {
 }
 
 class _WeMapState extends State<WeMap> {
-  final Completer<WeMapController> _controller =
-      Completer<WeMapController>();
+  final Completer<WeMapController> _controller = Completer<WeMapController>();
 
   _WeMapOptions _wemapMapOptions;
   final WeMapGlPlatform _WeMapGlPlatform = WeMapGlPlatform.createInstance();
@@ -186,7 +185,7 @@ class _WeMapState extends State<WeMap> {
       'initialCameraPosition': widget.initialCameraPosition?.toMap(),
       'options': _WeMapOptions.fromWidget(widget).toMap(),
       'logoViewMarginsY': 10 + widget.logoViewMargins.y.toDouble(),
-      'logoViewMarginsX': 4 + widget.logoViewMargins.x.toDouble() 
+      'logoViewMarginsX': 4 + widget.logoViewMargins.x.toDouble()
     };
     return _WeMapGlPlatform.buildView(
         creationParams, onPlatformViewCreated, widget.gestureRecognizers);
@@ -195,7 +194,7 @@ class _WeMapState extends State<WeMap> {
   @override
   void initState() {
     super.initState();
-    if(widget.styleString == null)
+    if (widget.styleString == null)
       widget.styleString = WeMapStyles.WEMAP_VECTOR_STYLE;
     _wemapMapOptions = _WeMapOptions.fromWidget(widget);
   }
@@ -221,23 +220,20 @@ class _WeMapState extends State<WeMap> {
   Future<void> onPlatformViewCreated(int id) async {
     WeMapGlPlatform.addInstance(id, _WeMapGlPlatform);
     final WeMapController controller = WeMapController.init(
-      id,
-      widget.initialCameraPosition,
-      onStyleLoadedCallback: () {
-        if (_controller.isCompleted) {
-          widget.onStyleLoadedCallback();
-        } else {
-          _controller.future.then((_) => widget.onStyleLoadedCallback());
-        }
-      },
+        id, widget.initialCameraPosition, onStyleLoadedCallback: () {
+      if (_controller.isCompleted) {
+        widget.onStyleLoadedCallback();
+      } else {
+        _controller.future.then((_) => widget.onStyleLoadedCallback());
+      }
+    },
         onMapClick: widget.onMapClick,
         onUserLocationUpdated: widget.onUserLocationUpdated,
         onMapLongClick: widget.onMapLongClick,
         onCameraTrackingDismissed: widget.onCameraTrackingDismissed,
         onCameraTrackingChanged: widget.onCameraTrackingChanged,
         onCameraIdle: widget.onCameraIdle,
-        onMapIdle: widget.onMapIdle
-    );
+        onMapIdle: widget.onMapIdle);
     await WeMapController.initPlatform(id);
     _controller.complete(controller);
     if (widget.onMapCreated != null) {

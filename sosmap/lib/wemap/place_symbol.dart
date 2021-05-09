@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 import 'dart:math';
 
@@ -8,7 +6,7 @@ import 'package:wemapgl/wemapgl.dart';
 
 import 'ePage.dart';
 
-class PlaceSymbolPage extends ePage {
+class PlaceSymbolPage extends EPage {
   PlaceSymbolPage() : super(const Icon(Icons.place), 'Place symbol');
 
   @override
@@ -211,13 +209,13 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('add'),
                           onPressed: () => (_symbolCount == 12)
                               ? null
                               : _add("assets/symbols/custom-icon.png"),
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('remove'),
                           onPressed: (_selectedSymbol == null) ? null : _remove,
                         ),
@@ -225,46 +223,47 @@ class PlaceSymbolBodyState extends State<PlaceSymbolBody> {
                     ),
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('change alpha'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _changeAlpha,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change icon offset'),
-                          onPressed:
-                              (_selectedSymbol == null) ? null : _changeIconOffset,
+                          onPressed: (_selectedSymbol == null)
+                              ? null
+                              : _changeIconOffset,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change icon anchor'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changeIconAnchor,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('toggle draggable'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _toggleDraggable,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change position'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changePosition,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change rotation'),
                           onPressed: (_selectedSymbol == null)
                               ? null
                               : _changeRotation,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('toggle visible'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _toggleVisible,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change zIndex'),
                           onPressed:
                               (_selectedSymbol == null) ? null : _changeZIndex,

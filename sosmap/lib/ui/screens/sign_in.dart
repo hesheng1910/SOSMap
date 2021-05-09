@@ -93,7 +93,7 @@ class _SignInScreenState extends State<SignInScreen> {
       ),
     );
 
-    final forgotLabel = FlatButton(
+    final forgotLabel = TextButton(
       child: Text(
         'Forgot password?',
         style: TextStyle(color: Colors.black54),
@@ -103,7 +103,7 @@ class _SignInScreenState extends State<SignInScreen> {
       },
     );
 
-    final signUpLabel = FlatButton(
+    final signUpLabel = TextButton(
       child: Text(
         'Create an Account',
         style: TextStyle(color: Colors.black54),

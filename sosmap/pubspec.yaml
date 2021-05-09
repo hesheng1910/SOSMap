@@ -62,6 +62,12 @@ flutter:
     - assets/geojson/ne_10m_ports.geojson
     - assets/geojson/line-samples.geojson
     - assets/geojson/polygon-samples.geojson
+    - assets/images/logo.png
+    - assets/images/powered_by.png
+    - assets/images/email_icon.png
+    - assets/images/password_icon.png
+    - assets/images/user_icon.png
+    - assets/images/as.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #  - images/a_dot_burr.jpeg

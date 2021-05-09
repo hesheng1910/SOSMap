@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sosmap/ui/screens/login_page.dart';
+import 'package:sosmap/ui/screens/signup_page.dart';
 
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/theme.dart';
@@ -27,7 +29,9 @@ class MyApp extends StatelessWidget {
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
-        '/route-page': (context) => RoutePage()
+        '/route-page': (context) => RoutePage(),
+        '/login-page': (context) => LoginPageFourteen(),
+        '/signup-page': (context) => SignupThreePage()
       },
     );
   }

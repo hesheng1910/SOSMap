@@ -20,26 +20,32 @@ class UserModel {
   String firstName;
   String lastName;
   String email;
+  String tel;
+  double rate;
 
-  UserModel({
-    this.userId,
-    this.firstName,
-    this.lastName,
-    this.email,
-  });
+  UserModel(
+      {this.userId,
+      this.firstName,
+      this.lastName,
+      this.email,
+      this.tel,
+      this.rate});
 
   factory UserModel.fromJson(Map<String, dynamic> json) => new UserModel(
-        userId: json["userId"],
-        firstName: json["firstName"],
-        lastName: json["lastName"],
-        email: json["email"],
-      );
+      userId: json["userId"],
+      firstName: json["firstName"],
+      lastName: json["lastName"],
+      email: json["email"],
+      tel: json["tel"],
+      rate: json["rate"]);
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
         "firstName": firstName,
         "lastName": lastName,
         "email": email,
+        "tel": tel,
+        "rate": rate
       };
 
   factory UserModel.fromDocument(DocumentSnapshot doc) {

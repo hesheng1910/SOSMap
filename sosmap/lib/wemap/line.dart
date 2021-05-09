@@ -1,5 +1,3 @@
-
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -7,7 +5,7 @@ import 'package:wemapgl/wemapgl.dart';
 
 import 'ePage.dart';
 
-class LinePage extends ePage {
+class LinePage extends EPage {
   LinePage() : super(const Icon(Icons.done), 'Line');
 
   @override
@@ -92,7 +90,6 @@ class LineBodyState extends State<LineBody> {
     });
   }
 
-
   Future<void> _changeAlpha() async {
     double current = _selectedLine.options.lineOpacity;
     if (current == null) {
@@ -119,10 +116,7 @@ class LineBodyState extends State<LineBody> {
   void onStyleLoadedCallback() {
     controller.addLine(
       LineOptions(
-        geometry: [
-          LatLng(37.4220, -122.0841),
-          LatLng(37.4240, -122.0941)
-        ],
+        geometry: [LatLng(37.4220, -122.0841), LatLng(37.4240, -122.0941)],
         lineColor: "#ff0000",
         lineWidth: 14.0,
         lineOpacity: 0.5,
@@ -159,11 +153,11 @@ class LineBodyState extends State<LineBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('add'),
                           onPressed: (_lineCount == 12) ? null : _add,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('remove'),
                           onPressed: (_selectedLine == null) ? null : _remove,
                         ),
@@ -171,12 +165,12 @@ class LineBodyState extends State<LineBody> {
                     ),
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('change alpha'),
                           onPressed:
                               (_selectedLine == null) ? null : _changeAlpha,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('toggle visible'),
                           onPressed:
                               (_selectedLine == null) ? null : _toggleVisible,

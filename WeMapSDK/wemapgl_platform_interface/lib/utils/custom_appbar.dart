@@ -1,4 +1,3 @@
-
 part of wemapgl;
 
 class CustomAppBar extends AppBar {

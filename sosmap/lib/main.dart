@@ -7,6 +7,7 @@ import 'package:sosmap/ui/screens/home.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/screens/sign_up.dart';
 import 'package:sosmap/ui/screens/forgot_password.dart';
+import 'package:sosmap/wemap/route.dart';
 
 import 'package:wemapgl/wemapgl.dart' as WEMAP;
 
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MyApp Title',
+      title: 'SOSMap',
       theme: buildTheme(),
       //onGenerateRoute: Navigation.router.generator,
       debugShowCheckedModeBanner: false,
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
+        '/route-page': (context) => RoutePage()
       },
     );
   }
@@ -33,7 +35,6 @@ class MyApp extends StatelessWidget {
 
 void main() async {
   WEMAP.Configuration.setWeMapKey('GqfwrZUEfxbwbnQUhtBMFivEysYIxelQ');
-
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   StateWidget stateWidget = new StateWidget(

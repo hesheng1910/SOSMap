@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +6,7 @@ import 'package:wemapgl/wemapgl.dart';
 
 import 'ePage.dart';
 
-class ScrollingMapPage extends ePage {
+class ScrollingMapPage extends EPage {
   ScrollingMapPage() : super(const Icon(Icons.map), 'Scrolling map');
 
   @override

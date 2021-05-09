@@ -16,8 +16,9 @@ import 'scrolling_map.dart';
 import 'route.dart';
 import 'search.dart';
 import 'simpleDirection.dart';
+import 'package:wemapgl/wemapgl.dart' as WEMAP;
 
-final List<ePage> _allPages = <ePage>[
+final List<EPage> _allPages = <EPage>[
   MapUiPage(),
   SearchPage(),
   SimpleDirectionPage(),
@@ -34,7 +35,7 @@ final List<ePage> _allPages = <ePage>[
 ];
 
 class MapsDemo extends StatelessWidget {
-  void _pushPage(BuildContext context, ePage page) async {
+  void _pushPage(BuildContext context, EPage page) async {
     final location = Location();
     final hasPermissions = await location.hasPermission();
     if (hasPermissions != PermissionStatus.GRANTED) {

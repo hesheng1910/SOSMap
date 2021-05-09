@@ -8,7 +8,7 @@ import 'package:sosmap/wemap/main.dart';
 
 import 'ePage.dart';
 
-class PlaceFillPage extends ePage {
+class PlaceFillPage extends EPage {
   PlaceFillPage() : super(const Icon(Icons.label), 'Place fill');
 
   @override
@@ -184,11 +184,11 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
                   children: <Widget>[
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('add'),
                           onPressed: (_fillCount == 12) ? null : _add,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('remove'),
                           onPressed: (_selectedFill == null) ? null : _remove,
                         ),
@@ -196,35 +196,35 @@ class PlaceFillBodyState extends State<PlaceFillBody> {
                     ),
                     Column(
                       children: <Widget>[
-                        FlatButton(
+                        TextButton(
                           child: const Text('change fill-opacity'),
                           onPressed: (_selectedFill == null)
                               ? null
                               : _changeFillOpacity,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change fill-color'),
                           onPressed:
                               (_selectedFill == null) ? null : _changeFillColor,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change fill-outline-color'),
                           onPressed: (_selectedFill == null)
                               ? null
                               : _changeFillOutlineColor,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change fill-pattern'),
                           onPressed: (_selectedFill == null)
                               ? null
                               : _changeFillPattern,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('change position'),
                           onPressed:
                               (_selectedFill == null) ? null : _changePosition,
                         ),
-                        FlatButton(
+                        TextButton(
                           child: const Text('toggle draggable'),
                           onPressed:
                               (_selectedFill == null) ? null : _changeDraggable,

@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static List<Widget> _widgetOptions = <Widget>[
     FullMapPage(),
     MapsDemo(),
-    ProfileScreen(),
+    ProfilePage(),
   ];
 
   void _onItemTapped(int index) async {

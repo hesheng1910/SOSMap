@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:html';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -337,19 +338,41 @@ class FullMapState extends State<FullMap> {
                             .then((value) {
                           Navigator.of(context).pop();
                           Alert(
-                                  context: context,
-                                  title: "Thông báo",
-                                  type: AlertType.success,
-                                  content:
-                                      Text('Tạo yêu cầu trợ giúp thành công'))
-                              .show();
+                            context: context,
+                            title: "Thông báo",
+                            type: AlertType.success,
+                            style: AlertStyle(isCloseButton: false),
+                            content: Text('Tạo yêu cầu trợ giúp thành công'),
+                            buttons: [
+                              DialogButton(
+                                  child: Text(
+                                    'Đóng',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  color: Colors.green)
+                            ],
+                          ).show();
                         }).catchError((error) => Alert(
                                     context: context,
                                     title: "Thông báo",
                                     type: AlertType.error,
+                                    style: AlertStyle(isCloseButton: false),
                                     content: Text(
-                                        'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'))
-                                .show())
+                                        'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
+                                    buttons: [
+                                      DialogButton(
+                                          child: Text(
+                                            'Đóng',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16),
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          color: Colors.red)
+                                    ]).show())
                         //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
                       },
                       child: Text(

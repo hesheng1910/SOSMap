@@ -48,10 +48,10 @@ class CardInfomation extends StatelessWidget {
               leading: CircleAvatar(
                 radius: 25.0,
                 child: Text(
-                    "${requestModel.user.firstName != null ? requestModel.user.firstName.substring(0, 1) : ""}${requestModel.user.lastName != null ? requestModel.user.lastName.substring(0, 1) : ""}"),
+                    "${requestModel.user.fullName != null ? requestModel.user.fullName.substring(0, 2) : ""}"),
               ),
               title: Text(
-                "${requestModel.user.firstName ?? ""} ${requestModel.user.lastName ?? ""}",
+                "${requestModel.user.fullName ?? ""}",
                 style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
               ),
               subtitle: Column(

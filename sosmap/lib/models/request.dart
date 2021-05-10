@@ -18,6 +18,8 @@ String requestToJson(RequestModel data) {
 
 class RequestModel {
   UserModel user;
+  String name;
+  String tel;
   double lat;
   double lng;
   String reason; //Tai nạn, Hỏng xe, Hết xăng, ...
@@ -28,6 +30,8 @@ class RequestModel {
 
   RequestModel(
       {this.user,
+      this.name,
+      this.tel,
       this.lat,
       this.lng,
       this.reason,
@@ -37,7 +41,9 @@ class RequestModel {
       this.createAt});
 
   factory RequestModel.fromJson(Map<String, dynamic> json) => new RequestModel(
-      user: json["user"],
+      user: UserModel.fromJson(json["user"]),
+      name: json["name"],
+      tel: json["tel"],
       lat: json["lat"],
       lng: json["lng"],
       reason: json["reason"],
@@ -47,7 +53,9 @@ class RequestModel {
       createAt: json["createAt"]);
 
   Map<String, dynamic> toJson() => {
-        "user": user,
+        "user": user.toJson(),
+        "name": name,
+        "tel": tel,
         "lat": lat,
         "lng": lng,
         "reason": reason,
@@ -59,5 +67,9 @@ class RequestModel {
 
   factory RequestModel.fromDocument(DocumentSnapshot doc) {
     return RequestModel.fromJson(doc.data());
+  }
+  @override
+  String toString() {
+    return "UserId: ${user.userId}\n Name: ${name}\n Tel: ${tel} \nlat: ${lat} \nlng: ${lng} \nreason: ${reason} \nmessage: ${message}";
   }
 }

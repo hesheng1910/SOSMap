@@ -13,7 +13,7 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _firstName = new TextEditingController();
+  final TextEditingController _fullName = new TextEditingController();
   final TextEditingController _lastName = new TextEditingController();
   final TextEditingController _email = new TextEditingController();
   final TextEditingController _password = new TextEditingController();
@@ -41,10 +41,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           )),
     );
 
-    final firstName = TextFormField(
+    final fullName = TextFormField(
       autofocus: false,
       textCapitalization: TextCapitalization.words,
-      controller: _firstName,
+      controller: _fullName,
       validator: Validator.validateName,
       decoration: InputDecoration(
         prefixIcon: Padding(
@@ -125,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         onPressed: () {
           _emailSignUp(
-              firstName: _firstName.text,
+              fullName: _fullName.text,
               lastName: _lastName.text,
               email: _email.text,
               password: _password.text,
@@ -163,7 +163,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     children: <Widget>[
                       logo,
                       SizedBox(height: 48.0),
-                      firstName,
+                      fullName,
                       SizedBox(height: 24.0),
                       lastName,
                       SizedBox(height: 24.0),
@@ -190,7 +190,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _emailSignUp(
-      {String firstName,
+      {String fullName,
       String lastName,
       String email,
       String password,
@@ -204,8 +204,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           Auth.addUserSettingsDB(new UserModel(
             userId: uID,
             email: email,
-            firstName: firstName,
-            lastName: lastName,
+            fullName: fullName,
           ));
         });
         //now automatically login user too

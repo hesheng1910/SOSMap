@@ -7,8 +7,6 @@ import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
 import 'package:sosmap/wemap/main.dart';
-import 'package:sosmap/wemap/place_symbol.dart';
-import 'package:sosmap/wemap/route.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
@@ -22,13 +20,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  int _selectedIndex = 0;
-
-  static List<Widget> _widgetOptions = <Widget>[
-    FullMapPage(),
+  final List<Widget> _widgetOptions = <Widget>[
+    FullMap(),
     MapsDemo(),
-    ProfileScreen(),
+    ProfilePage(),
   ];
+  int _selectedIndex = 0;
 
   void _onItemTapped(int index) async {
     final location = Location();
@@ -73,12 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
 //check for null https://stackoverflow.com/questions/49775261/check-null-in-ternary-operation
       final userId = appState?.firebaseUserAuth?.uid ?? '';
       final email = appState?.firebaseUserAuth?.email ?? '';
-      final firstName = appState?.user?.firstName ?? '';
-      final lastName = appState?.user?.lastName ?? '';
+      final fullName = appState?.user?.fullName ?? '';
       final settingsId = appState?.settings?.settingsId ?? '';
       final userIdLabel = Text('App Id: ');
       final emailLabel = Text('Email: ');
-      final firstNameLabel = Text('First Name: ');
+      final fullNameLabel = Text('First Name: ');
       final lastNameLabel = Text('Last Name: ');
       final settingsIdLabel = Text('SetttingsId: ');
 

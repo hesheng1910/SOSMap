@@ -1,22 +1,20 @@
 import 'dart:async';
+import 'dart:html';
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
+import 'package:sosmap/models/state.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
-import 'package:sosmap/wemap/ePage.dart';
+import 'package:sosmap/ui/widgets/create_help.dart';
+import 'package:sosmap/util/request.dart';
+import 'package:sosmap/util/state_widget.dart';
 import 'package:wemapgl/wemapgl.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
-class FullMapPage extends EPage {
-  FullMapPage() : super(const Icon(Icons.map), 'Full screen map');
-
-  @override
-  Widget build(BuildContext context) {
-    return const FullMap();
-  }
-}
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 class FullMap extends StatefulWidget {
   const FullMap();
@@ -27,26 +25,15 @@ class FullMap extends StatefulWidget {
 
 class FullMapState extends State<FullMap> {
   FullMapState();
-
   static final CameraPosition _kInitialPosition = const CameraPosition(
     target: LatLng(21.038282, 105.782885),
     zoom: 11.0,
   );
-
+  StateModel appState;
+  static WeMap weMap;
   WeMapController mapController;
-  CameraPosition _position = _kInitialPosition;
-  bool _isMoving = false;
-  bool _compassEnabled = true;
-  CameraTargetBounds _cameraTargetBounds = CameraTargetBounds.unbounded;
-  MinMaxZoomPreference _minMaxZoomPreference = MinMaxZoomPreference.unbounded;
-  String _styleString = WeMapStyles.WEMAP_VECTOR_STYLE;
-  bool _rotateGesturesEnabled = true;
-  bool _scrollGesturesEnabled = true;
-  bool _tiltGesturesEnabled = true;
-  bool _zoomGesturesEnabled = true;
-  bool _myLocationEnabled = true;
-  MyLocationTrackingMode _myLocationTrackingMode =
-      MyLocationTrackingMode.Tracking;
+  CameraPosition _position;
+  bool _isMoving;
 
   LatLng myLatLng = LatLng(21.038282, 105.782885);
   bool reverse = true;
@@ -54,29 +41,44 @@ class FullMapState extends State<FullMap> {
 
   int _symbolCount = 0;
   Symbol _selectedSymbol;
-
-  List<RequestModel> listUser = [
-    RequestModel(
-        user: UserModel(firstName: 'User1', tel: '123456', rate: 2.6),
-        lat: 21.038282,
-        lng: 105.782885,
-        reason: "Tai nạn",
-        message: "Tôi đang bị tai nạn, hãy đến giúp tôi",
-        createAt: DateTime(2021, 5, 8, 17, 30)),
-    RequestModel(
-        user: UserModel(firstName: 'User2', tel: '0886151242'),
-        lat: 21.138282,
-        lng: 105.982885,
-        reason: "Hỏng xe",
-        message: "Tôi đang bị hỏng xe, hãy đến giúp tôi",
-        createAt: DateTime(2021, 5, 9, 17, 30)),
-  ];
+  @override
+  void initState() {
+    _position = _kInitialPosition;
+    _isMoving = false;
+    weMap = WeMap(
+      initialCameraPosition: _kInitialPosition,
+      onMapCreated: onMapCreated,
+      trackCameraPosition: true,
+      compassEnabled: true,
+      cameraTargetBounds: CameraTargetBounds.unbounded,
+      minMaxZoomPreference: MinMaxZoomPreference.unbounded,
+      styleString: WeMapStyles.WEMAP_VECTOR_STYLE,
+      rotateGesturesEnabled: true,
+      scrollGesturesEnabled: true,
+      tiltGesturesEnabled: true,
+      zoomGesturesEnabled: true,
+      myLocationEnabled: true,
+      onStyleLoadedCallback: () => print('map style loaded'),
+      // myLocationTrackingMode: _myLocationTrackingMode,
+      // myLocationRenderMode: MyLocationRenderMode.GPS,
+      reverse: false,
+      // onPlaceCardClose: () => print("close card"),
+      // onMapClick: (point, latlng, place) {
+      //   print(point);
+      //   _onUnSelectedSymbol();
+      // },
+      // onCameraTrackingDismissed: () {
+      //   this.setState(() {
+      //     _myLocationTrackingMode = MyLocationTrackingMode.None;
+      //   });
+      // }
+    );
+    super.initState();
+  }
 
   void onMapCreated(WeMapController controller) {
     mapController = controller;
-    listUser.forEach((user) {
-      _add(LatLng(user.lat, user.lng), user.toJson());
-    });
+
     mapController.addListener(_onMapChanged);
     mapController.onSymbolTapped.add(_onSymbolTapped);
     _extractMapInfo();
@@ -140,10 +142,9 @@ class FullMapState extends State<FullMap> {
     });
   }
 
-  void _remove() {
-    mapController.removeSymbol(_selectedSymbol);
+  void _remove(Symbol symbol) {
+    mapController.removeSymbol(symbol);
     setState(() {
-      _selectedSymbol = null;
       _symbolCount -= 1;
     });
   }
@@ -176,37 +177,35 @@ class FullMapState extends State<FullMap> {
 
   @override
   Widget build(BuildContext context) {
-    final WeMap weMap = WeMap(
-        onMapCreated: onMapCreated,
-        initialCameraPosition: _kInitialPosition,
-        trackCameraPosition: true,
-        compassEnabled: _compassEnabled,
-        cameraTargetBounds: _cameraTargetBounds,
-        minMaxZoomPreference: _minMaxZoomPreference,
-        styleString: _styleString,
-        rotateGesturesEnabled: _rotateGesturesEnabled,
-        scrollGesturesEnabled: _scrollGesturesEnabled,
-        tiltGesturesEnabled: _tiltGesturesEnabled,
-        zoomGesturesEnabled: _zoomGesturesEnabled,
-        myLocationEnabled: _myLocationEnabled,
-        myLocationTrackingMode: _myLocationTrackingMode,
-        myLocationRenderMode: MyLocationRenderMode.GPS,
-        reverse: true,
-        onPlaceCardClose: () => print("close card"),
-        onMapClick: (point, latlng, place) {
-          print(point);
-          _onUnSelectedSymbol();
-        },
-        onCameraTrackingDismissed: () {
-          this.setState(() {
-            _myLocationTrackingMode = MyLocationTrackingMode.None;
-          });
-        });
+    appState = StateWidget.of(context).state;
+    final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
+
+    // if (mapController != null &&
+    //     mapController.symbols != null &&
+    //     mapController.symbols.length > 0)
+    //   mapController.symbols.forEach((element) {
+    //     _remove(element);
+    //   });
+
+    CollectionReference requestModels =
+        FirebaseFirestore.instance.collection('requests');
+    requestModels.snapshots().listen((result) {
+      result.docs.forEach((request) {
+        RequestModel requestData = RequestModel.fromJson(request.data());
+        if (mapController.symbols.firstWhere(
+                (element) =>
+                    element.data["lat"] == requestData.lat &&
+                    element.data["lng"] == requestData.lng,
+                orElse: () => null) ==
+            null)
+          _add(LatLng(requestData.lat, requestData.lng), requestData.toJson());
+      });
+    });
 
     return new Scaffold(
       body: Stack(
         children: <Widget>[
-          weMap,
+          if (weMap != null) weMap,
           if (_selectedSymbol != null)
             new Container(
               alignment: Alignment.center,
@@ -215,7 +214,7 @@ class FullMapState extends State<FullMap> {
                 onCloseBtn: _onUnSelectedSymbol,
                 onOpenMapBtn: () {
                   setState(() {
-                    listUser[0].user.rate = Random().nextDouble() * 5;
+                    //listUser[0].user.rate = Random().nextDouble() * 5;
                   });
                 },
                 onConfirmBtn: () => {},
@@ -301,7 +300,89 @@ class FullMapState extends State<FullMap> {
             backgroundColor: Colors.orange,
             label: 'Gọi trợ giúp',
             labelStyle: TextStyle(fontSize: 18.0),
-            onTap: () => print('SECOND CHILD'),
+            onTap: () {
+              Alert(
+                  context: context,
+                  title: "YÊU CẦU TRỢ GIÚP",
+                  content: _createHelpPopup,
+                  closeIcon: Icon(
+                    Icons.close,
+                    color: Colors.red,
+                  ),
+                  style: AlertStyle(
+                    animationType: AnimationType.grow,
+                    isCloseButton: true,
+                    isOverlayTapDismiss: false,
+                    descStyle: TextStyle(fontWeight: FontWeight.bold),
+                    descTextAlign: TextAlign.start,
+                    overlayColor: Colors.black54,
+                    animationDuration: Duration(milliseconds: 300),
+                    alertBorder: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side: BorderSide(
+                        color: Colors.green,
+                      ),
+                    ),
+                    titleStyle: TextStyle(
+                      color: Colors.green,
+                    ),
+                    alertAlignment: Alignment.center,
+                  ),
+                  buttons: [
+                    DialogButton(
+                      onPressed: () => {
+                        FirebaseFirestore.instance
+                            .collection('requests')
+                            .doc()
+                            .set(_createHelpPopup.requestModel.toJson())
+                            .then((value) {
+                          Navigator.of(context).pop();
+                          Alert(
+                            context: context,
+                            title: "Thông báo",
+                            type: AlertType.success,
+                            style: AlertStyle(isCloseButton: false),
+                            content: Text('Tạo yêu cầu trợ giúp thành công'),
+                            buttons: [
+                              DialogButton(
+                                  child: Text(
+                                    'Đóng',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 16),
+                                  ),
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  color: Colors.green)
+                            ],
+                          ).show();
+                        }).catchError((error) => Alert(
+                                    context: context,
+                                    title: "Thông báo",
+                                    type: AlertType.error,
+                                    style: AlertStyle(isCloseButton: false),
+                                    content: Text(
+                                        'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
+                                    buttons: [
+                                      DialogButton(
+                                          child: Text(
+                                            'Đóng',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16),
+                                          ),
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          color: Colors.red)
+                                    ]).show())
+                        //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
+                      },
+                      child: Text(
+                        "Tạo yêu cầu",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      color: Colors.green,
+                    )
+                  ]).show();
+            },
             onLongPress: () => print('SECOND CHILD LONG PRESS'),
           ),
           SpeedDialChild(

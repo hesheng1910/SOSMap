@@ -19,7 +19,7 @@ class Auth {
   static void addUserSettingsDB(UserModel user) async {
     checkUserExist(user.userId).then((value) {
       if (!value) {
-        print("user ${user.firstName} ${user.email} added");
+        print("user ${user.fullName} ${user.email} added");
         FirebaseFirestore.instance
             .collection('users')
             .doc(user.userId)
@@ -28,7 +28,7 @@ class Auth {
           settingsId: user.userId,
         ));
       } else {
-        print("user ${user.firstName} ${user.email} exists");
+        print("user ${user.fullName} ${user.email} exists");
       }
     });
   }
@@ -111,16 +111,16 @@ class Auth {
     return currentUser;
   }
 
-  static Future<UserModel> getUserLocal() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (prefs.getString('user') != null) {
-      UserModel user = userFromJson(prefs.getString('user'));
-      //print('USER: $user');
-      return user;
-    } else {
-      return null;
-    }
-  }
+  // static Future<UserModel> getUserLocal() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   if (prefs.getString('user') != null) {
+  //     UserModel user = userFromJson(prefs.getString('user'));
+  //     //print('USER: $user');
+  //     return user;
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   static Future<SettingModels> getSettingsLocal() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

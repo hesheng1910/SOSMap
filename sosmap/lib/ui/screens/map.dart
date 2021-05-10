@@ -1,14 +1,10 @@
 import 'dart:async';
-import 'dart:html';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
-import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
-import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:wemapgl/wemapgl.dart';
 

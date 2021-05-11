@@ -17,32 +17,23 @@ String userToJson(UserModel data) {
 
 class UserModel {
   String userId;
-  String firstName;
-  String lastName;
+  String fullName;
   String email;
   String tel;
   double rate;
 
-  UserModel(
-      {this.userId,
-      this.firstName,
-      this.lastName,
-      this.email,
-      this.tel,
-      this.rate});
+  UserModel({this.userId, this.fullName, this.email, this.tel, this.rate});
 
   factory UserModel.fromJson(Map<String, dynamic> json) => new UserModel(
       userId: json["userId"],
-      firstName: json["firstName"],
-      lastName: json["lastName"],
+      fullName: json["fullName"],
       email: json["email"],
       tel: json["tel"],
       rate: json["rate"]);
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
-        "firstName": firstName,
-        "lastName": lastName,
+        "fullName": fullName,
         "email": email,
         "tel": tel,
         "rate": rate

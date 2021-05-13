@@ -111,16 +111,16 @@ class Auth {
     return currentUser;
   }
 
-  // static Future<UserModel> getUserLocal() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   if (prefs.getString('user') != null) {
-  //     UserModel user = userFromJson(prefs.getString('user'));
-  //     //print('USER: $user');
-  //     return user;
-  //   } else {
-  //     return null;
-  //   }
-  // }
+  static Future<UserModel> getUserLocal() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString('user') != null) {
+      UserModel user = userFromJson(prefs.getString('user'));
+      //print('USER: $user');
+      return user;
+    } else {
+      return null;
+    }
+  }
 
   static Future<SettingModels> getSettingsLocal() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

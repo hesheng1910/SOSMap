@@ -12,20 +12,18 @@ class RequestAPI {
   static void addRequestDB(RequestModel requestModel) async {
     FirebaseFirestore.instance
         .collection('requests')
-        .doc()
+        .doc(requestModel.userId)
         .set(requestModel.toJson());
   }
 
-  // static Future<List<RequestModel>> getRequestFirestore() async {
-  //     Listlist = FirebaseFirestore.instance
-  //         .collection('request')
-  //         .snapshots()
-  //         .listen((result) {
-  //             result.docs.forEach((element) {
+  static void editRequestDB(RequestModel requestModel) async {
+    FirebaseFirestore.instance
+        .collection('requests')
+        .doc(requestModel.userId)
+        .update(requestModel.toJson());
+  }
 
-  //             })
-  //          })
-  //         .then((documentSnapshot) => RequestModel.fromDocument(documentSnapshot));
-  //   }
-  //
+  static Future<List<RequestModel>> getRequestFirestore() async {
+    //return FirebaseFirestore.instance.collection('request').snapshots();
+  }
 }

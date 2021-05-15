@@ -17,7 +17,7 @@ String requestToJson(RequestModel data) {
 }
 
 class RequestModel {
-  UserModel user;
+  String userId;
   String name;
   String tel;
   double lat;
@@ -25,23 +25,23 @@ class RequestModel {
   String reason; //Tai nạn, Hỏng xe, Hết xăng, ...
   String message;
   String status;
-  UserModel helper;
-  DateTime createAt;
+  String helperId;
+  Timestamp createAt;
 
   RequestModel(
-      {this.user,
+      {this.userId,
       this.name,
       this.tel,
       this.lat,
       this.lng,
       this.reason,
       this.message,
-      this.helper,
+      this.helperId,
       this.status,
       this.createAt});
 
   factory RequestModel.fromJson(Map<String, dynamic> json) => new RequestModel(
-      user: UserModel.fromJson(json["user"]),
+      userId: json["userId"],
       name: json["name"],
       tel: json["tel"],
       lat: json["lat"],
@@ -49,18 +49,18 @@ class RequestModel {
       reason: json["reason"],
       message: json["message"],
       status: json["status"],
-      helper: json["helper"],
+      helperId: json["helperId"],
       createAt: json["createAt"]);
 
   Map<String, dynamic> toJson() => {
-        "user": user.toJson(),
+        "userId": userId,
         "name": name,
         "tel": tel,
         "lat": lat,
         "lng": lng,
         "reason": reason,
         "message": message,
-        "helper": helper,
+        "helperId": helperId,
         "status": status,
         "createAt": createAt
       };
@@ -70,6 +70,6 @@ class RequestModel {
   }
   @override
   String toString() {
-    return "UserId: ${user.userId}\n Name: ${name}\n Tel: ${tel} \nlat: ${lat} \nlng: ${lng} \nreason: ${reason} \nmessage: ${message}";
+    return "UserId: ${userId}\n Name: ${name}\n Tel: ${tel} \nlat: ${lat} \nlng: ${lng} \nreason: ${reason} \nmessage: ${message}";
   }
 }

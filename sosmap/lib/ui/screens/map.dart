@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:html';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
-import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
 import 'package:sosmap/util/request.dart';
@@ -39,12 +37,18 @@ class FullMapState extends State<FullMap> {
   bool reverse = true;
   WeMapPlace place;
 
-  int _symbolCount = 0;
+  //int _symbolCount;
   Symbol _selectedSymbol;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  Stream<QuerySnapshot> listRequest;
   @override
   void initState() {
     _position = _kInitialPosition;
     _isMoving = false;
+    //_symbolCount = 0;
+
+    listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
     weMap = WeMap(
       initialCameraPosition: _kInitialPosition,
       onMapCreated: onMapCreated,
@@ -59,20 +63,9 @@ class FullMapState extends State<FullMap> {
       zoomGesturesEnabled: true,
       myLocationEnabled: true,
       onStyleLoadedCallback: () => print('map style loaded'),
-      // myLocationTrackingMode: _myLocationTrackingMode,
-      // myLocationRenderMode: MyLocationRenderMode.GPS,
       reverse: false,
-      // onPlaceCardClose: () => print("close card"),
-      // onMapClick: (point, latlng, place) {
-      //   print(point);
-      //   _onUnSelectedSymbol();
-      // },
-      // onCameraTrackingDismissed: () {
-      //   this.setState(() {
-      //     _myLocationTrackingMode = MyLocationTrackingMode.None;
-      //   });
-      // }
     );
+
     super.initState();
   }
 
@@ -137,16 +130,16 @@ class FullMapState extends State<FullMap> {
           iconImage: "assets/symbols/help.png",
         ),
         requestData);
-    setState(() {
-      _symbolCount += 1;
-    });
+    // setState(() {
+    //   _symbolCount += 1;
+    // });
   }
 
   void _remove(Symbol symbol) {
     mapController.removeSymbol(symbol);
-    setState(() {
-      _symbolCount -= 1;
-    });
+    // setState(() {
+    //   _symbolCount -= 1;
+    // });
   }
 
   void _changePosition() {
@@ -175,6 +168,13 @@ class FullMapState extends State<FullMap> {
     ));
   }
 
+  Future<void> _confirmHelp(RequestModel requestModel) {
+    RequestModel newRequest = requestModel;
+    newRequest.helperId = appState.user.userId;
+    newRequest.status = "waiting";
+    RequestAPI.editRequestDB(newRequest);
+  }
+
   @override
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
@@ -187,25 +187,56 @@ class FullMapState extends State<FullMap> {
     //     _remove(element);
     //   });
 
-    CollectionReference requestModels =
-        FirebaseFirestore.instance.collection('requests');
-    requestModels.snapshots().listen((result) {
-      result.docs.forEach((request) {
-        RequestModel requestData = RequestModel.fromJson(request.data());
-        if (mapController.symbols.firstWhere(
-                (element) =>
-                    element.data["lat"] == requestData.lat &&
-                    element.data["lng"] == requestData.lng,
-                orElse: () => null) ==
-            null)
-          _add(LatLng(requestData.lat, requestData.lng), requestData.toJson());
-      });
-    });
+    // CollectionReference requestModels =
+    //     FirebaseFirestore.instance.collection('requests');
+    // requestModels.snapshots().listen((result) {
+    //   result.docs.forEach((request) {
+    //     RequestModel requestData = RequestModel.fromJson(request.data());
+    //     if (mapController.symbols.firstWhere(
+    //             (element) =>
+    //                 element.data["lat"] == requestData.lat &&
+    //                 element.data["lng"] == requestData.lng,
+    //             orElse: () => null) ==
+    //         null)
+    //       _add(LatLng(requestData.lat, requestData.lng), requestData.toJson());
+    //   });
+    // });
 
-    return new Scaffold(
+    return Scaffold(
+      key: _scaffoldKey,
       body: Stack(
         children: <Widget>[
-          if (weMap != null) weMap,
+          if (weMap != null)
+            StreamBuilder<QuerySnapshot>(
+                stream: listRequest,
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData) {
+                    snapshot.data.docs.forEach((data) {
+                      RequestModel newRequest = RequestModel.fromDocument(data);
+
+                      Symbol symbol = mapController.symbols.firstWhere(
+                          (element) =>
+                              RequestModel.fromJson(element.data).userId ==
+                              newRequest.userId,
+                          orElse: () => null);
+                      if (symbol == null)
+                        _add(LatLng(newRequest.lat, newRequest.lng),
+                            newRequest.toJson());
+                      else {
+                        Map<String, dynamic> requestJson = newRequest.toJson();
+                        Map<String, dynamic> symbolDataJson = symbol.data;
+                        if (mapEquals(requestJson, symbolDataJson)) {
+                        } else {
+                          _remove(symbol);
+                          _add(LatLng(newRequest.lat, newRequest.lng),
+                              newRequest.toJson());
+                        }
+                      }
+                    });
+                  }
+                  return weMap;
+                }),
           if (_selectedSymbol != null)
             new Container(
               alignment: Alignment.center,
@@ -217,7 +248,8 @@ class FullMapState extends State<FullMap> {
                     //listUser[0].user.rate = Random().nextDouble() * 5;
                   });
                 },
-                onConfirmBtn: () => {},
+                onConfirmBtn: () =>
+                    {_confirmHelp(RequestModel.fromJson(_selectedSymbol.data))},
               ),
             ),
           WeMapSearchBar(
@@ -330,10 +362,12 @@ class FullMapState extends State<FullMap> {
                   ),
                   buttons: [
                     DialogButton(
-                      onPressed: () => {
+                      onPressed: () {
+                        _createHelpPopup.requestModel.createAt =
+                            Timestamp.now();
                         FirebaseFirestore.instance
                             .collection('requests')
-                            .doc()
+                            .doc(appState.user.userId)
                             .set(_createHelpPopup.requestModel.toJson())
                             .then((value) {
                           Navigator.of(context).pop();
@@ -372,7 +406,7 @@ class FullMapState extends State<FullMap> {
                                           onPressed: () =>
                                               Navigator.of(context).pop(),
                                           color: Colors.red)
-                                    ]).show())
+                                    ]).show());
                         //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
                       },
                       child: Text(

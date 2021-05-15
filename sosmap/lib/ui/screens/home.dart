@@ -20,11 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
   }
 
-  final List<Widget> _widgetOptions = <Widget>[
-    FullMap(),
-    MapsDemo(),
-    ProfilePage(),
-  ];
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) async {
@@ -41,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
+    if (appState == null) return SignInScreen();
     if (!appState.isLoading &&
         (appState.firebaseUserAuth == null ||
             appState.user == null ||
@@ -52,32 +48,23 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         _loadingVisible = false;
       }
-      final logo = Hero(
-        tag: 'hero',
-        child: CircleAvatar(
-            backgroundColor: Colors.transparent,
-            radius: 60.0,
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/default.png',
-                fit: BoxFit.cover,
-                width: 120.0,
-                height: 120.0,
-              ),
-            )),
-      );
 
 //check for null https://stackoverflow.com/questions/49775261/check-null-in-ternary-operation
-      final userId = appState?.firebaseUserAuth?.uid ?? '';
-      final email = appState?.firebaseUserAuth?.email ?? '';
-      final fullName = appState?.user?.fullName ?? '';
-      final settingsId = appState?.settings?.settingsId ?? '';
-      final userIdLabel = Text('App Id: ');
-      final emailLabel = Text('Email: ');
-      final fullNameLabel = Text('First Name: ');
-      final lastNameLabel = Text('Last Name: ');
-      final settingsIdLabel = Text('SetttingsId: ');
+      // final userId = appState?.firebaseUserAuth?.uid ?? '';
+      // final email = appState?.firebaseUserAuth?.email ?? '';
+      // final fullName = appState?.user?.fullName ?? '';
+      // final settingsId = appState?.settings?.settingsId ?? '';
+      // final userIdLabel = Text('App Id: ');
+      // final emailLabel = Text('Email: ');
+      // final fullNameLabel = Text('First Name: ');
+      // final lastNameLabel = Text('Last Name: ');
+      // final settingsIdLabel = Text('SetttingsId: ');
 
+      final List<Widget> _widgetOptions = <Widget>[
+        FullMap(),
+        MapsDemo(),
+        ProfilePage(),
+      ];
       return Scaffold(
         backgroundColor: Colors.white,
         body: LoadingScreen(

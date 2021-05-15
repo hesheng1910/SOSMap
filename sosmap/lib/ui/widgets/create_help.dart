@@ -26,7 +26,7 @@ class CreateHelpPopup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     requestModel = RequestModel(
-        user: userModel, name: userModel.fullName, tel: userModel.tel);
+        userId: userModel.userId, name: userModel.fullName, tel: userModel.tel);
     return Column(
       children: <Widget>[
         TextField(
@@ -133,6 +133,7 @@ class CreateHelpPopup extends StatelessWidget {
           },
           onSuggestionSelected: (suggestion) {
             this._typeReasonController.text = suggestion;
+            requestModel.reason = suggestion;
           },
           validator: (value) => value.isEmpty ? 'Chọn vấn đề đang gặp' : null,
           onSaved: (value) => requestModel.reason = value,

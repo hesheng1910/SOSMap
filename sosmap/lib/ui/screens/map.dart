@@ -214,8 +214,7 @@ class FullMapState extends State<FullMap> {
                   if (snapshot.hasData) {
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
-
-                      Symbol symbol = mapController.symbols.firstWhere(
+                      Symbol symbol = mapController.symbols?.firstWhere(
                           (element) =>
                               RequestModel.fromJson(element.data).userId ==
                               newRequest.userId,

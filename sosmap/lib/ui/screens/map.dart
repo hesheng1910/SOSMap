@@ -6,6 +6,7 @@ import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
+import 'package:sosmap/ui/widgets/help_info.dart';
 import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:wemapgl/wemapgl.dart';
@@ -40,8 +41,11 @@ class FullMapState extends State<FullMap> {
   //int _symbolCount;
   Symbol _selectedSymbol;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  WeMapDirections directionAPI = WeMapDirections();
 
   Stream<QuerySnapshot> listRequest;
+  bool _isDrawRouter = false;
+  RequestModel _userNeedHelp;
   @override
   void initState() {
     _position = _kInitialPosition;
@@ -62,7 +66,7 @@ class FullMapState extends State<FullMap> {
       tiltGesturesEnabled: true,
       zoomGesturesEnabled: true,
       myLocationEnabled: true,
-      onStyleLoadedCallback: () => print('map style loaded'),
+      onStyleLoadedCallback: () => _getCurrentLocation(),
       reverse: false,
     );
 
@@ -166,6 +170,9 @@ class FullMapState extends State<FullMap> {
         zoom: 14.0,
       ),
     ));
+    setState(() {
+      myLatLng = myLocation;
+    });
   }
 
   Future<void> _confirmHelp(RequestModel requestModel) {
@@ -175,32 +182,66 @@ class FullMapState extends State<FullMap> {
     RequestAPI.editRequestDB(newRequest);
   }
 
+  void _updateHelper(RequestModel requestModel) {
+    setState(() {
+      _userNeedHelp = requestModel;
+    });
+  }
+
+  void _drawRoute() async {
+    if (_isDrawRouter) {
+      if (_userNeedHelp == null) {
+        mapController.clearCircles();
+        mapController.clearLines();
+      }
+      return;
+    }
+    if (_userNeedHelp == null ||
+        _userNeedHelp.lat == null ||
+        _userNeedHelp.lng == null) return;
+
+    mapController.clearCircles();
+    mapController.clearLines();
+    List<LatLng> points = [];
+    points.add(myLatLng);
+    points.add(LatLng(_userNeedHelp.lat, _userNeedHelp.lng));
+    final json = await directionAPI.getResponseMultiRoute(
+        0, points); //0 = car, 1 = bike, 2 = foot
+    List<LatLng> _route = directionAPI.getRoute(json);
+    List<LatLng> _waypoins = directionAPI.getWayPoints(json);
+    if (_route != null) {
+      await mapController.addLine(
+        LineOptions(
+          geometry: _route,
+          lineColor: "#0071bc",
+          lineWidth: 5.0,
+          lineOpacity: 1,
+        ),
+      );
+      await mapController.addCircle(CircleOptions(
+          geometry: _waypoins[0],
+          circleRadius: 8.0,
+          circleColor: '#d3d3d3',
+          circleStrokeWidth: 1.5,
+          circleStrokeColor: '#0071bc'));
+      for (int i = 1; i < _waypoins.length; i++) {
+        await mapController.addCircle(CircleOptions(
+            geometry: _waypoins[i],
+            circleRadius: 8.0,
+            circleColor: '#ffffff',
+            circleStrokeWidth: 1.5,
+            circleStrokeColor: '#0071bc'));
+      }
+      setState(() {
+        _isDrawRouter = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
-
-    // if (mapController != null &&
-    //     mapController.symbols != null &&
-    //     mapController.symbols.length > 0)
-    //   mapController.symbols.forEach((element) {
-    //     _remove(element);
-    //   });
-
-    // CollectionReference requestModels =
-    //     FirebaseFirestore.instance.collection('requests');
-    // requestModels.snapshots().listen((result) {
-    //   result.docs.forEach((request) {
-    //     RequestModel requestData = RequestModel.fromJson(request.data());
-    //     if (mapController.symbols.firstWhere(
-    //             (element) =>
-    //                 element.data["lat"] == requestData.lat &&
-    //                 element.data["lng"] == requestData.lng,
-    //             orElse: () => null) ==
-    //         null)
-    //       _add(LatLng(requestData.lat, requestData.lng), requestData.toJson());
-    //   });
-    // });
 
     return Scaffold(
       key: _scaffoldKey,
@@ -212,6 +253,7 @@ class FullMapState extends State<FullMap> {
                 builder: (BuildContext context,
                     AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
+                    RequestModel userNeedHelp;
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
                       Symbol symbol = mapController.symbols?.firstWhere(
@@ -232,8 +274,20 @@ class FullMapState extends State<FullMap> {
                               newRequest.toJson());
                         }
                       }
+
+                      // Nếu đang trợ giúp ai đó
+                      if (newRequest.helperId == appState.user.userId &&
+                          newRequest.status == "waiting") {
+                        userNeedHelp = newRequest;
+                      }
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _updateHelper(userNeedHelp);
                     });
                   }
+
+                  //_updateHelper(userNeedHelp);
+                  _drawRoute();
                   return weMap;
                 }),
           if (_selectedSymbol != null)
@@ -251,30 +305,14 @@ class FullMapState extends State<FullMap> {
                     {_confirmHelp(RequestModel.fromJson(_selectedSymbol.data))},
               ),
             ),
-          WeMapSearchBar(
-            location: myLatLng,
-            onSelected: (_place) {
-              setState(() {
-                place = _place;
-                print(_place.placeName);
-              });
-              mapController.moveCamera(
-                CameraUpdate.newCameraPosition(
-                  CameraPosition(
-                    target: place.location,
-                    zoom: 14.0,
-                  ),
-                ),
-              );
-              mapController.showPlaceCard?.call(place);
-            },
-            onClearInput: () {
-              setState(() {
-                place = null;
-                //mapController.showPlaceCard(place);
-              });
-            },
-          ),
+          if (_userNeedHelp != null)
+            new SafeArea(
+                child: Container(
+              alignment: Alignment.topCenter,
+              child: HelpInfo(
+                helpRequest: _userNeedHelp,
+              ),
+            ))
         ],
       ),
       floatingActionButton: SpeedDial(

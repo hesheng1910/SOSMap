@@ -26,6 +26,7 @@ class RequestModel {
   String message;
   String status;
   String helperId;
+  String price;
   Timestamp createAt;
 
   RequestModel(
@@ -38,6 +39,7 @@ class RequestModel {
       this.message,
       this.helperId,
       this.status,
+      this.price,
       this.createAt});
 
   factory RequestModel.fromJson(Map<String, dynamic> json) => new RequestModel(
@@ -50,6 +52,7 @@ class RequestModel {
       message: json["message"],
       status: json["status"],
       helperId: json["helperId"],
+      price: json["price"],
       createAt: json["createAt"]);
 
   Map<String, dynamic> toJson() => {
@@ -62,6 +65,7 @@ class RequestModel {
         "message": message,
         "helperId": helperId,
         "status": status,
+        "price": price,
         "createAt": createAt
       };
 

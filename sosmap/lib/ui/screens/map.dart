@@ -4,9 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
+import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
 import 'package:sosmap/ui/widgets/help_info.dart';
+import 'package:sosmap/util/auth.dart';
 import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:wemapgl/wemapgl.dart';
@@ -34,7 +36,7 @@ class FullMapState extends State<FullMap> {
   CameraPosition _position;
   bool _isMoving;
 
-  LatLng myLatLng = LatLng(21.038282, 105.782885);
+  LatLng myLatLng;
   bool reverse = true;
   WeMapPlace place;
 
@@ -46,12 +48,11 @@ class FullMapState extends State<FullMap> {
   Stream<QuerySnapshot> listRequest;
   bool _isDrawRouter = false;
   RequestModel _userNeedHelp;
+  RequestModel _myHelpRequest;
   @override
   void initState() {
     _position = _kInitialPosition;
-    _isMoving = false;
-    //_symbolCount = 0;
-
+    _isMoving = true;
     listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
     weMap = WeMap(
       initialCameraPosition: _kInitialPosition,
@@ -89,8 +90,10 @@ class FullMapState extends State<FullMap> {
   }
 
   void _onMapChanged() {
-    setState(() {
-      _extractMapInfo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _extractMapInfo();
+      });
     });
   }
 
@@ -170,9 +173,19 @@ class FullMapState extends State<FullMap> {
         zoom: 14.0,
       ),
     ));
+    _updateCurrentLocation();
+  }
+
+  Future<void> _updateCurrentLocation() async {
+    LatLng myLocation = await mapController.requestMyLocationLatLng();
     setState(() {
       myLatLng = myLocation;
     });
+    UserModel newUser = appState.user;
+    newUser.lat = myLocation.latitude;
+    newUser.lng = myLocation.longitude;
+    Auth.updateUser(newUser);
+    StateWidget.of(context).initUser();
   }
 
   Future<void> _confirmHelp(RequestModel requestModel) {
@@ -188,6 +201,12 @@ class FullMapState extends State<FullMap> {
     });
   }
 
+  void _updateMyHelp(RequestModel requestModel) {
+    setState(() {
+      _myHelpRequest = requestModel;
+    });
+  }
+
   void _drawRoute() async {
     if (_isDrawRouter) {
       if (_userNeedHelp == null) {
@@ -199,7 +218,13 @@ class FullMapState extends State<FullMap> {
     if (_userNeedHelp == null ||
         _userNeedHelp.lat == null ||
         _userNeedHelp.lng == null) return;
-
+    if (myLatLng == null) {
+      await _updateCurrentLocation();
+      if (myLatLng == null) {
+        print("Không lấy được vị trí");
+        return;
+      }
+    }
     mapController.clearCircles();
     mapController.clearLines();
     List<LatLng> points = [];
@@ -213,7 +238,7 @@ class FullMapState extends State<FullMap> {
       await mapController.addLine(
         LineOptions(
           geometry: _route,
-          lineColor: "#0071bc",
+          lineColor: "#00904a",
           lineWidth: 5.0,
           lineOpacity: 1,
         ),
@@ -223,14 +248,14 @@ class FullMapState extends State<FullMap> {
           circleRadius: 8.0,
           circleColor: '#d3d3d3',
           circleStrokeWidth: 1.5,
-          circleStrokeColor: '#0071bc'));
+          circleStrokeColor: '#00904a'));
       for (int i = 1; i < _waypoins.length; i++) {
         await mapController.addCircle(CircleOptions(
             geometry: _waypoins[i],
             circleRadius: 8.0,
             circleColor: '#ffffff',
             circleStrokeWidth: 1.5,
-            circleStrokeColor: '#0071bc'));
+            circleStrokeColor: '#00904a'));
       }
       setState(() {
         _isDrawRouter = true;
@@ -254,6 +279,7 @@ class FullMapState extends State<FullMap> {
                     AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
                     RequestModel userNeedHelp;
+                    RequestModel myHelp;
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
                       Symbol symbol = mapController.symbols?.firstWhere(
@@ -280,13 +306,16 @@ class FullMapState extends State<FullMap> {
                           newRequest.status == "waiting") {
                         userNeedHelp = newRequest;
                       }
+                      if (newRequest.userId == appState.user.userId) {
+                        myHelp = newRequest;
+                      }
                     });
                     WidgetsBinding.instance.addPostFrameCallback((_) {
                       _updateHelper(userNeedHelp);
+                      _updateMyHelp(myHelp);
                     });
                   }
 
-                  //_updateHelper(userNeedHelp);
                   _drawRoute();
                   return weMap;
                 }),
@@ -301,18 +330,32 @@ class FullMapState extends State<FullMap> {
                     //listUser[0].user.rate = Random().nextDouble() * 5;
                   });
                 },
-                onConfirmBtn: () =>
-                    {_confirmHelp(RequestModel.fromJson(_selectedSymbol.data))},
+                onConfirmBtn: () {
+                  _confirmHelp(RequestModel.fromJson(_selectedSymbol.data));
+                  _onUnSelectedSymbol();
+                },
               ),
             ),
-          if (_userNeedHelp != null)
+          // if (_userNeedHelp != null)
+          //      new SafeArea(
+          //       child: Container(
+          //         alignment: Alignment.topCenter,
+          //         child: HelpInfo(
+          //           helpRequest: _userNeedHelp,
+          //           haveHelpRequest: false,
+          //         ),
+          //       ),
+          //     ),
+          if (_myHelpRequest != null)
             new SafeArea(
-                child: Container(
-              alignment: Alignment.topCenter,
-              child: HelpInfo(
-                helpRequest: _userNeedHelp,
+              child: Container(
+                alignment: Alignment.topCenter,
+                child: HelpInfo(
+                  helpRequest: _myHelpRequest,
+                  haveHelpRequest: true,
+                ),
               ),
-            ))
+            )
         ],
       ),
       floatingActionButton: SpeedDial(
@@ -400,51 +443,54 @@ class FullMapState extends State<FullMap> {
                   buttons: [
                     DialogButton(
                       onPressed: () {
-                        _createHelpPopup.requestModel.createAt =
-                            Timestamp.now();
-                        FirebaseFirestore.instance
-                            .collection('requests')
-                            .doc(appState.user.userId)
-                            .set(_createHelpPopup.requestModel.toJson())
-                            .then((value) {
-                          Navigator.of(context).pop();
-                          Alert(
-                            context: context,
-                            title: "Thông báo",
-                            type: AlertType.success,
-                            style: AlertStyle(isCloseButton: false),
-                            content: Text('Tạo yêu cầu trợ giúp thành công'),
-                            buttons: [
-                              DialogButton(
-                                  child: Text(
-                                    'Đóng',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  color: Colors.green)
-                            ],
-                          ).show();
-                        }).catchError((error) => Alert(
-                                    context: context,
-                                    title: "Thông báo",
-                                    type: AlertType.error,
-                                    style: AlertStyle(isCloseButton: false),
-                                    content: Text(
-                                        'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
-                                    buttons: [
-                                      DialogButton(
-                                          child: Text(
-                                            'Đóng',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16),
-                                          ),
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                          color: Colors.red)
-                                    ]).show());
-                        //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
+                        if (_createHelpPopup.formKey.currentState.validate()) {
+                          _createHelpPopup.requestModel.createAt =
+                              Timestamp.now();
+                          FirebaseFirestore.instance
+                              .collection('requests')
+                              .doc(appState.user.userId)
+                              .set(_createHelpPopup.requestModel.toJson())
+                              .then((value) {
+                            Navigator.of(context).pop();
+                            Alert(
+                              context: context,
+                              title: "Thông báo",
+                              type: AlertType.success,
+                              style: AlertStyle(isCloseButton: false),
+                              content: Text('Tạo yêu cầu trợ giúp thành công'),
+                              buttons: [
+                                DialogButton(
+                                    child: Text(
+                                      'Đóng',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    color: Colors.green)
+                              ],
+                            ).show();
+                          }).catchError((error) => Alert(
+                                      context: context,
+                                      title: "Thông báo",
+                                      type: AlertType.error,
+                                      style: AlertStyle(isCloseButton: false),
+                                      content: Text(
+                                          'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
+                                      buttons: [
+                                        DialogButton(
+                                            child: Text(
+                                              'Đóng',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16),
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            color: Colors.red)
+                                      ]).show());
+                          //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
+                        }
                       },
                       child: Text(
                         "Tạo yêu cầu",

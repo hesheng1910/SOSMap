@@ -282,11 +282,14 @@ class FullMapState extends State<FullMap> {
                     RequestModel myHelp;
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
-                      Symbol symbol = mapController.symbols?.firstWhere(
-                          (element) =>
-                              RequestModel.fromJson(element.data).userId ==
-                              newRequest.userId,
-                          orElse: () => null);
+                      Symbol symbol = (mapController.symbols != null &&
+                              mapController.symbols.length > 0)
+                          ? mapController.symbols?.firstWhere(
+                              (element) =>
+                                  RequestModel.fromJson(element.data).userId ==
+                                  newRequest.userId,
+                              orElse: () => null)
+                          : null;
                       if (symbol == null)
                         _add(LatLng(newRequest.lat, newRequest.lng),
                             newRequest.toJson());
@@ -336,16 +339,16 @@ class FullMapState extends State<FullMap> {
                 },
               ),
             ),
-          // if (_userNeedHelp != null)
-          //      new SafeArea(
-          //       child: Container(
-          //         alignment: Alignment.topCenter,
-          //         child: HelpInfo(
-          //           helpRequest: _userNeedHelp,
-          //           haveHelpRequest: false,
-          //         ),
-          //       ),
-          //     ),
+          if (_userNeedHelp != null)
+            new SafeArea(
+              child: Container(
+                alignment: Alignment.topCenter,
+                child: HelpInfo(
+                  helpRequest: _userNeedHelp,
+                  haveHelpRequest: false,
+                ),
+              ),
+            ),
           if (_myHelpRequest != null)
             new SafeArea(
               child: Container(

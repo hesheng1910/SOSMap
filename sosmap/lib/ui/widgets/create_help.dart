@@ -172,14 +172,16 @@ class CreateHelpPopup extends StatelessWidget {
           ),
           TextField(
             decoration: InputDecoration(
-              icon: Icon(
-                Icons.money,
-                color: Colors.grey,
-              ),
-              labelText: 'Phí giúp đỡ (VNĐ)',
-              labelStyle: TextStyle(color: Colors.grey),
-            ),
-            controller: TextEditingController(text: "0"),
+                icon: Icon(
+                  Icons.money,
+                  color: Colors.grey,
+                ),
+                labelText: 'Phí giúp đỡ',
+                labelStyle: TextStyle(color: Colors.grey),
+                suffixText: 'VND',
+                hintText: 'Miễn phí',
+                hintStyle: const TextStyle(color: Colors.grey),
+                suffixStyle: const TextStyle(color: Colors.green)),
             keyboardType: TextInputType.number,
             onChanged: (value) => {requestModel.price = value},
           ),

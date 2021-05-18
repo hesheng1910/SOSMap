@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:expandable/expandable.dart';
 import 'package:sosmap/models/user.dart';
+import 'package:sosmap/ui/widgets/rating_card.dart';
 import 'package:sosmap/util/auth.dart';
 import 'package:sosmap/util/request.dart';
 
@@ -148,6 +150,35 @@ class _HelpInfoState extends State<HelpInfo> {
                         ],
                       ),
                     ),
+                  ),
+                ],
+              ),
+              ButtonBar(
+                alignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      Alert(
+                          style: AlertStyle(animationType: AnimationType.grow),
+                          context: context,
+                          title: "XÁC NHẬN HOÀN THÀNH TRỢ GIÚP",
+                          content: RatingCard(),
+                          buttons: [
+                            DialogButton(
+                              child: Text(
+                                'XÁC NHẬN',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              color: Colors.green,
+                            )
+                          ]).show();
+                    },
+                    style: TextButton.styleFrom(
+                        primary: Colors.white, backgroundColor: Colors.green),
+                    child: const Text('HOÀN THÀNH'),
                   ),
                 ],
               ),

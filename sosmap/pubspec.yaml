@@ -34,6 +34,7 @@ dependencies:
   flutter_typeahead: ^2.0.0
   expandable: ^5.0.1
   flutter_rating_bar: ^4.0.0
+  flutter_masked_text: ^0.8.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -47,7 +48,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
   image_path: "assets/icon/icon.png"
 flutter:
@@ -101,7 +102,7 @@ flutter_native_splash:
 
   # The image parameter allows you to specify an image used in the splash screen.  It must be a 
   # png file.  
-  #image: assets/splash.png
+  image: assets/icon/icon.png
 
   # The color_dark, background_image_dark, and image_dark are parameters that set the background
   # and image when the device is in dark mode. If they are not specified, the app will use the
@@ -116,7 +117,7 @@ flutter_native_splash:
   # platform.
   #android: false
   #ios: false
-  #web: false
+  web: false
 
   # The position of the splash image can be set with android_gravity, ios_content_mode, and
   # web_image_mode parameters.  All default to center.

@@ -1,18 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_masked_text/flutter_masked_text.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:wemapgl/wemapgl.dart';
+import 'package:intl/intl.dart';
 
 class CreateHelpPopup extends StatelessWidget {
   CreateHelpPopup({Key key, this.userModel}) : super(key: key);
   final formKey = GlobalKey<FormState>();
   final TextEditingController _typeLocationController = TextEditingController();
   final TextEditingController _typeReasonController = TextEditingController();
+  final TextEditingController _typeMoneyController =
+      new MaskedTextController(mask: '000.000.000');
   UserModel userModel;
   String _selectedPlaceName;
-  String _reason;
   List<String> reasonS = [
     'Gặp tai nạn',
     'Hỏng phương tiện',
@@ -26,6 +29,8 @@ class CreateHelpPopup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var formatter = NumberFormat('###,###,000');
+
     requestModel = RequestModel(
         userId: userModel.userId, name: userModel.fullName, tel: userModel.tel);
     return Form(
@@ -39,10 +44,7 @@ class CreateHelpPopup extends StatelessWidget {
                 return null;
               },
               decoration: InputDecoration(
-                  icon: Icon(
-                    Icons.account_circle,
-                    color: Colors.grey,
-                  ),
+                  prefixIcon: Icon(Icons.account_circle),
                   labelText: 'Tên người cần giúp',
                   labelStyle: TextStyle(color: Colors.grey)),
               controller: TextEditingController(text: userModel.fullName),
@@ -54,32 +56,29 @@ class CreateHelpPopup extends StatelessWidget {
               return null;
             },
             decoration: InputDecoration(
-              icon: Icon(
-                Icons.phone,
-                color: Colors.grey,
-              ),
+              prefixIcon: Icon(Icons.phone),
               labelText: 'Số điện thoại',
               labelStyle: TextStyle(color: Colors.grey),
             ),
             controller: TextEditingController(text: userModel.tel),
             keyboardType: TextInputType.phone,
+            maxLength: 11,
+            buildCounter: (BuildContext context,
+                    {int currentLength, int maxLength, bool isFocused}) =>
+                null,
             onChanged: (value) => {requestModel.tel = value},
           ),
           TypeAheadFormField(
             textFieldConfiguration: TextFieldConfiguration(
               controller: this._typeLocationController,
               decoration: InputDecoration(
-                icon: Icon(
-                  Icons.gps_fixed,
-                  color: Colors.grey,
-                ),
+                prefixIcon: Icon(Icons.gps_fixed),
                 labelText: 'Vị trí',
                 labelStyle: TextStyle(color: Colors.grey),
                 suffixIcon: IconButton(
                   onPressed: () {
                     this._typeLocationController.clear();
-                    requestModel.lat = null;
-                    requestModel.lng = null;
+                    requestModel.place = null;
                   },
                   icon: Icon(
                     Icons.clear_outlined,
@@ -109,13 +108,11 @@ class CreateHelpPopup extends StatelessWidget {
             },
             onSuggestionSelected: (WeMapPlace suggestion) {
               this._typeLocationController.text = suggestion.placeName;
-              requestModel.lat = suggestion.location.latitude;
-              requestModel.lng = suggestion.location.longitude;
+              requestModel.place = suggestion;
             },
             validator: (value) {
               if (value.isEmpty) return 'Chọn vị trí của bạn';
-              if (requestModel.lat == null && requestModel.lng == null)
-                return 'Vị trí không hợp lệ';
+              if (requestModel.place == null) return 'Vị trí không hợp lệ';
               return null;
             },
             onSaved: (value) => this._selectedPlaceName = value,
@@ -124,10 +121,7 @@ class CreateHelpPopup extends StatelessWidget {
             textFieldConfiguration: TextFieldConfiguration(
               controller: this._typeReasonController,
               decoration: InputDecoration(
-                icon: Icon(
-                  Icons.warning,
-                  color: Colors.grey,
-                ),
+                prefixIcon: Icon(Icons.warning),
                 labelText: 'Vấn đề đang gặp',
                 labelStyle: TextStyle(color: Colors.grey),
               ),
@@ -158,10 +152,7 @@ class CreateHelpPopup extends StatelessWidget {
           ),
           TextField(
             decoration: InputDecoration(
-              icon: Icon(
-                Icons.edit,
-                color: Colors.grey,
-              ),
+              prefixIcon: Icon(Icons.message),
               labelText: 'Lời nhắn',
               labelStyle: TextStyle(color: Colors.grey),
             ),
@@ -172,18 +163,21 @@ class CreateHelpPopup extends StatelessWidget {
           ),
           TextField(
             decoration: InputDecoration(
-                icon: Icon(
-                  Icons.money,
-                  color: Colors.grey,
-                ),
+                prefixIcon: Icon(Icons.money),
                 labelText: 'Phí giúp đỡ',
                 labelStyle: TextStyle(color: Colors.grey),
                 suffixText: 'VND',
                 hintText: 'Miễn phí',
                 hintStyle: const TextStyle(color: Colors.grey),
                 suffixStyle: const TextStyle(color: Colors.green)),
+            controller: _typeMoneyController,
             keyboardType: TextInputType.number,
-            onChanged: (value) => {requestModel.price = value},
+            maxLength: 11,
+            buildCounter: (BuildContext context,
+                    {int currentLength, int maxLength, bool isFocused}) =>
+                null,
+            onChanged: (value) =>
+                {requestModel.price = value.replaceAll(RegExp('[.]'), '')},
           ),
         ],
       ),

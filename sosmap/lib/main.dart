@@ -59,7 +59,7 @@ class Home extends StatelessWidget {
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
-        '/route-page': (context) => RoutePage(),
+        '/route-page': (context) => Routing(),
         '/login-page': (context) => LoginPageFourteen(),
         '/signup-page': (context) => SignupThreePage()
       },

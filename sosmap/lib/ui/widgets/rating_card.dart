@@ -1,13 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:sosmap/models/report.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:sosmap/util/auth.dart';
 
 class RatingCard extends StatefulWidget {
-  const RatingCard({
+  RatingCard({
     Key key,
+    this.requestModel,
+    this.reportModel,
   }) : super(key: key);
+  final RequestModel requestModel;
+
+  ReportModel reportModel;
   @override
   _RatingCardState createState() => _RatingCardState();
 }
@@ -19,16 +26,12 @@ class _RatingCardState extends State<RatingCard> {
     super.initState();
   }
 
-  void _getUserModel() async {
-    //_userModel = await Auth.getUserFirestore(widget.requestModel.userId);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         RatingBar.builder(
-            initialRating: 3,
+            initialRating: 5,
             itemCount: 5,
             itemBuilder: (context, index) {
               switch (index) {
@@ -60,7 +63,7 @@ class _RatingCardState extends State<RatingCard> {
               }
             },
             onRatingUpdate: (rating) {
-              print(rating);
+              widget.reportModel.rate = rating.toInt();
             }),
         SizedBox(
           height: 10,
@@ -80,6 +83,9 @@ class _RatingCardState extends State<RatingCard> {
           ),
           minLines: 1,
           maxLines: 5,
+          onChanged: (value) {
+            widget.reportModel.reviewMessage = value;
+          },
         ),
       ],
     );

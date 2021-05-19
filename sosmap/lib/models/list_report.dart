@@ -22,11 +22,16 @@ class ListReportModel {
 
   ListReportModel({this.userId, this.listReport});
 
-  factory ListReportModel.fromJson(Map<String, dynamic> json) =>
-      new ListReportModel(
-          userId: json["userId"], listReport: json["listReport"]);
-
-  Map<String, dynamic> toJson() => {"userId": userId, "listReport": listReport};
+  factory ListReportModel.fromJson(Map<String, dynamic> json) {
+    Iterable i = json['listReport'];
+    List<ReportModel> reports =
+        i.map((model) => ReportModel.fromJson(model)).toList();
+    return new ListReportModel(userId: json["userId"], listReport: reports);
+  }
+  Map<String, dynamic> toJson() => {
+        "userId": userId,
+        "listReport": listReport.map((report) => report.toJson()).toList()
+      };
 
   factory ListReportModel.fromDocument(DocumentSnapshot doc) {
     return ListReportModel.fromJson(doc.data());

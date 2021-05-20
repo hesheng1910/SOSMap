@@ -71,7 +71,7 @@ class _SignInScreenState extends State<SignInScreen> {
             color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
-        hintText: 'Password',
+        hintText: 'Mật khẩu',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
       ),
@@ -89,13 +89,13 @@ class _SignInScreenState extends State<SignInScreen> {
         },
         padding: EdgeInsets.all(12),
         color: Theme.of(context).primaryColor,
-        child: Text('SIGN IN', style: TextStyle(color: Colors.white)),
+        child: Text('ĐĂNG NHẬP', style: TextStyle(color: Colors.white)),
       ),
     );
 
     final forgotLabel = TextButton(
       child: Text(
-        'Forgot password?',
+        'Quên mật khẩu ?',
         style: TextStyle(color: Colors.black54),
       ),
       onPressed: () {
@@ -105,7 +105,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
     final signUpLabel = TextButton(
       child: Text(
-        'Create an Account',
+        'Đăng ký tài khoản mới',
         style: TextStyle(color: Colors.black54),
       ),
       onPressed: () {
@@ -160,13 +160,13 @@ class _SignInScreenState extends State<SignInScreen> {
         await _changeLoadingVisible();
         //need await so it has chance to go through error if found.
         await StateWidget.of(context).logInUser(email, password);
-        await Navigator.pushNamed(context, '/');
+        await Navigator.pushNamed(context, '/home');
       } catch (e) {
         _changeLoadingVisible();
-        print("Sign In Error: $e");
+        print("Đăng nhập không thành công: $e");
         String exception = Auth.getExceptionText(e);
         Flushbar(
-          title: "Sign In Error",
+          title: "Đăng nhập không thành công",
           message: exception,
           duration: Duration(seconds: 5),
         )..show(context);

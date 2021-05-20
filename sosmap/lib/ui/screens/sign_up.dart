@@ -14,7 +14,7 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _fullName = new TextEditingController();
-  final TextEditingController _lastName = new TextEditingController();
+  final TextEditingController _phoneNumber = new TextEditingController();
   final TextEditingController _email = new TextEditingController();
   final TextEditingController _password = new TextEditingController();
 
@@ -54,17 +54,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
             color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
-        hintText: 'First Name',
+        hintText: 'Họ và tên',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
       ),
     );
 
-    final lastName = TextFormField(
+    final phoneNumber = TextFormField(
       autofocus: false,
-      textCapitalization: TextCapitalization.words,
-      controller: _lastName,
-      validator: Validator.validateName,
+      
+      controller: _phoneNumber,
+      validator: Validator.validatePhoneNumber,
       decoration: InputDecoration(
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
@@ -73,7 +73,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
-        hintText: 'Last Name',
+        hintText: 'Số điện thoại',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
       ),
@@ -111,7 +111,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
-        hintText: 'Password',
+        hintText: 'Mật khẩu',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
       ),
@@ -126,20 +126,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
         onPressed: () {
           _emailSignUp(
               fullName: _fullName.text,
-              lastName: _lastName.text,
+              phoneNumber: _phoneNumber.text,
               email: _email.text,
               password: _password.text,
               context: context);
         },
         padding: EdgeInsets.all(12),
         color: Theme.of(context).primaryColor,
-        child: Text('SIGN UP', style: TextStyle(color: Colors.white)),
+        child: Text('ĐĂNG KÝ TÀI KHOẢN', style: TextStyle(color: Colors.white)),
       ),
     );
 
     final signInLabel = TextButton(
       child: Text(
-        'Have an Account? Sign In.',
+        'Đăng nhập với tài khoản đã có',
         style: TextStyle(color: Colors.black54),
       ),
       onPressed: () {
@@ -165,7 +165,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(height: 48.0),
                       fullName,
                       SizedBox(height: 24.0),
-                      lastName,
+                      phoneNumber,
                       SizedBox(height: 24.0),
                       email,
                       SizedBox(height: 24.0),
@@ -191,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _emailSignUp(
       {String fullName,
-      String lastName,
+      String phoneNumber,
       String email,
       String password,
       BuildContext context}) async {
@@ -205,6 +205,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             userId: uID,
             email: email,
             fullName: fullName,
+            tel: phoneNumber
           ));
         });
         //now automatically login user too
@@ -212,10 +213,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await Navigator.pushNamed(context, '/signin');
       } catch (e) {
         _changeLoadingVisible();
-        print("Sign Up Error: $e");
+        print("Đăng ký không thành công: $e");
         String exception = Auth.getExceptionText(e);
         Flushbar(
-          title: "Sign Up Error",
+          title: "Đăng ký không thành công",
           message: exception,
           duration: Duration(seconds: 5),
         )..show(context);

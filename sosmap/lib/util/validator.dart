@@ -34,4 +34,14 @@ class Validator {
     else
       return null;
   }
+
+  static String validatePhoneNumber(String value) {
+    Pattern pattern = r'^(?:[+0][1-9])?[0-9]{10,12}$';
+    RegExp regex = new RegExp(pattern);
+    if (!regex.hasMatch(value))
+      return 'Please enter a phonenumber.';
+    else
+      return null;
+  }
+
 }

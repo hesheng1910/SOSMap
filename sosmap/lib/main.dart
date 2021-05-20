@@ -55,14 +55,15 @@ class Home extends StatelessWidget {
       //onGenerateRoute: Navigation.router.generator,
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (context) => HomeScreen(),
+        '/': (context) => SignInScreen(),
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
         '/route-page': (context) => RoutePage(),
         '/login-page': (context) => LoginPageFourteen(),
-        '/signup-page': (context) => SignupThreePage()
-      },
+        '/signup-page': (context) => SignupThreePage(),
+        '/home': (context) => HomeScreen()
+       },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sosmap/models/request.dart';
 
 // To parse this JSON data, do
 //
@@ -16,29 +17,21 @@ String requestToJson(ReportModel data) {
 }
 
 class ReportModel {
-  String helperId;
-  String requestId;
+  RequestModel request;
   int rate;
   String reviewMessage;
   Timestamp createAt;
 
-  ReportModel(
-      {this.helperId,
-      this.requestId,
-      this.rate,
-      this.reviewMessage,
-      this.createAt});
+  ReportModel({this.request, this.rate, this.reviewMessage, this.createAt});
 
   factory ReportModel.fromJson(Map<String, dynamic> json) => new ReportModel(
-      helperId: json["helperId"],
-      requestId: json["requestId"],
+      request: RequestModel.fromJson(json["requestId"]),
       rate: json["rate"],
       reviewMessage: json["reviewMessage"],
       createAt: json["createAt"]);
 
   Map<String, dynamic> toJson() => {
-        "helperId": helperId,
-        "requestId": requestId,
+        "requestId": request.toJson(),
         "rate": rate,
         "reviewMessage": reviewMessage,
         "createAt": createAt

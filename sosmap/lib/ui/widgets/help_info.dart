@@ -1,17 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:sosmap/models/list_report.dart';
+import 'package:sosmap/models/report.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:expandable/expandable.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/rating_card.dart';
 import 'package:sosmap/util/auth.dart';
+import 'package:sosmap/util/list_report.dart';
 import 'package:sosmap/util/request.dart';
+import 'package:sosmap/wemap/route.dart';
+import 'package:intl/intl.dart';
+
+import 'package:wemapgl/wemapgl.dart';
 
 class HelpInfo extends StatefulWidget {
   final RequestModel helpRequest;
   final bool haveHelpRequest;
+  final myLocation;
 
-  const HelpInfo({Key key, this.helpRequest, this.haveHelpRequest})
+  const HelpInfo(
+      {Key key, this.helpRequest, this.haveHelpRequest, this.myLocation})
       : super(key: key);
   @override
   _HelpInfoState createState() => _HelpInfoState();
@@ -40,6 +50,7 @@ class _HelpInfoState extends State<HelpInfo> {
 
   @override
   Widget build(BuildContext context) {
+    var formatter = NumberFormat('###,###,000');
     if (widget.haveHelpRequest) {
       if (widget.helpRequest.status == "waiting") {
         _getUserHelp();
@@ -123,7 +134,8 @@ class _HelpInfoState extends State<HelpInfo> {
                                   ),
                                 ),
                                 TextSpan(
-                                    text: " ${_userHelp?.rate ?? 0}",
+                                    text:
+                                        " ${_userHelp?.rate?.toStringAsFixed(2) ?? 0}",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -141,7 +153,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                 ),
                                 TextSpan(
                                     text:
-                                        " ${widget.helpRequest.price ?? "0"} VNĐ",
+                                        " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -158,18 +170,55 @@ class _HelpInfoState extends State<HelpInfo> {
                 children: [
                   TextButton(
                     onPressed: () {
+                      RatingCard ratingCard = new RatingCard(
+                          requestModel: widget.helpRequest,
+                          reportModel: new ReportModel(
+                              request: widget.helpRequest,
+                              rate: 5,
+                              reviewMessage: null));
                       Alert(
                           style: AlertStyle(animationType: AnimationType.grow),
                           context: context,
                           title: "XÁC NHẬN HOÀN THÀNH TRỢ GIÚP",
-                          content: RatingCard(),
+                          content: ratingCard,
                           buttons: [
                             DialogButton(
                               child: Text(
                                 'XÁC NHẬN',
                                 style: TextStyle(color: Colors.white),
                               ),
-                              onPressed: () {
+                              onPressed: () async {
+                                ratingCard.reportModel.createAt =
+                                    Timestamp.now();
+                                if (widget.helpRequest.userId != null) {
+                                  ListReportModel listReportModel =
+                                      await ReportAPI.getListReportFirestore(
+                                          widget.helpRequest.userId);
+                                  if (listReportModel == null)
+                                    listReportModel = new ListReportModel(
+                                        userId: widget.helpRequest.userId);
+                                  if (listReportModel.listReport == null)
+                                    listReportModel.listReport = [
+                                      ratingCard.reportModel
+                                    ];
+                                  else
+                                    listReportModel.listReport
+                                        .add(ratingCard.reportModel);
+                                  await ReportAPI.addReportDB(listReportModel);
+                                  await RequestAPI.deleteRequestDB(
+                                      widget.helpRequest.userId);
+
+                                  // cập nhật rate user
+                                  setState(() {
+                                    _userHelp.rate = (_userHelp.rate ??
+                                            5.0 +
+                                                ratingCard.reportModel.rate
+                                                    .toDouble()) /
+                                        2;
+                                  });
+
+                                  Auth.updateUser(_userHelp);
+                                }
                                 Navigator.pop(context);
                               },
                               color: Colors.green,
@@ -234,7 +283,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                 ),
                                 TextSpan(
                                     text:
-                                        " ${widget.helpRequest?.price ?? 0} VNĐ",
+                                        " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -284,7 +333,29 @@ class _HelpInfoState extends State<HelpInfo> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      // Huỷ yêu cầu
+                      Alert(
+                              title: "XÁC NHẬN HUỶ YÊU CẦU",
+                              content:
+                                  Text('Bạn muốn huỷ yêu cầu trợ giúp chứ ?'),
+                              type: AlertType.warning,
+                              style:
+                                  AlertStyle(animationType: AnimationType.grow),
+                              buttons: [
+                                DialogButton(
+                                  child: Text(
+                                    'XÁC NHẬN',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  onPressed: () {
+                                    RequestAPI.deleteRequestDB(
+                                        widget.helpRequest.userId);
+                                    Navigator.of(context).pop();
+                                  },
+                                  color: Colors.green,
+                                )
+                              ],
+                              context: context)
+                          .show();
                     },
                     style: TextButton.styleFrom(
                         primary: Colors.white, backgroundColor: Colors.red),
@@ -399,7 +470,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                   ),
                                   TextSpan(
                                       text:
-                                          " ${widget.helpRequest.price ?? "0"} VNĐ",
+                                          " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
                                       style: TextStyle(
                                           color: Colors.black, fontSize: 16)),
                                 ],
@@ -426,7 +497,14 @@ class _HelpInfoState extends State<HelpInfo> {
                     ),
                     if (widget.helpRequest.status == "waiting")
                       TextButton(
-                        onPressed: () => {},
+                        onPressed: () {
+                          WeMapPlace destination = widget.helpRequest.place;
+                          WeMapPlace origin =
+                              WeMapPlace(location: widget.myLocation);
+                          Navigator.pushNamed(context, '/route-page',
+                              arguments:
+                                  ScreenRouteArguments(origin, destination));
+                        },
                         style: TextButton.styleFrom(
                             primary: Colors.white,
                             backgroundColor: Colors.green),
@@ -474,8 +552,7 @@ class _HelpInfoState extends State<HelpInfo> {
                             fontSize: 16),
                       ),
                       TextSpan(
-                        text:
-                            " 63, Trần Quốc Vượng, Cầu Giấy, Hà Nội, Việt Nam",
+                        text: " ${widget.helpRequest.place.placeName}",
                         style: TextStyle(color: Colors.black, fontSize: 16),
                       )
                     ],

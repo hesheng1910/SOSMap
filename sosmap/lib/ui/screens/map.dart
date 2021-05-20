@@ -1,7 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/models/user.dart';
@@ -11,10 +17,11 @@ import 'package:sosmap/ui/widgets/help_info.dart';
 import 'package:sosmap/util/auth.dart';
 import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
+import 'package:sosmap/wemap/route.dart';
 import 'package:wemapgl/wemapgl.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class FullMap extends StatefulWidget {
@@ -49,8 +56,55 @@ class FullMapState extends State<FullMap> {
   bool _isDrawRouter = false;
   RequestModel _userNeedHelp;
   RequestModel _myHelpRequest;
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    'This channel is used for important notifications.', // description
+    importance: Importance.high,
+  );
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   @override
   void initState() {
+    initTokenFCM();
+    FirebaseMessaging.instance
+        .getInitialMessage()
+        .then((RemoteMessage message) {
+      if (message != null) {
+        print('Có notification');
+      }
+    });
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification?.android;
+      if (notification != null && android != null) {
+        FlutterAppBadger.updateBadgeCount(1);
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                channel.description,
+                // TODO add a proper drawable resource to android, for now using
+                //      one that already exists in example app.
+                //icon: 'launch_background',
+                color: Color.fromRGBO(0, 144, 74, 1),
+              ),
+            ));
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      FlutterAppBadger.removeBadge();
+      print('A new onMessageOpenedApp event was published!');
+    });
+
     _position = _kInitialPosition;
     _isMoving = true;
     listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
@@ -131,6 +185,7 @@ class FullMapState extends State<FullMap> {
   }
 
   Future<void> _add(LatLng latlng, Map<String, dynamic> requestData) async {
+    if (mapController == null) return;
     await mapController.addSymbol(
         SymbolOptions(
           geometry: latlng,
@@ -215,9 +270,7 @@ class FullMapState extends State<FullMap> {
       }
       return;
     }
-    if (_userNeedHelp == null ||
-        _userNeedHelp.lat == null ||
-        _userNeedHelp.lng == null) return;
+    if (_userNeedHelp == null || _userNeedHelp.place == null) return;
     if (myLatLng == null) {
       await _updateCurrentLocation();
       if (myLatLng == null) {
@@ -229,7 +282,7 @@ class FullMapState extends State<FullMap> {
     mapController.clearLines();
     List<LatLng> points = [];
     points.add(myLatLng);
-    points.add(LatLng(_userNeedHelp.lat, _userNeedHelp.lng));
+    points.add(_userNeedHelp.place.location);
     final json = await directionAPI.getResponseMultiRoute(
         0, points); //0 = car, 1 = bike, 2 = foot
     List<LatLng> _route = directionAPI.getRoute(json);
@@ -263,11 +316,82 @@ class FullMapState extends State<FullMap> {
     }
   }
 
+  Future<void> initTokenFCM() async {
+    String token = await FirebaseMessaging.instance.getToken();
+    await saveTokenToDatabase(token);
+    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
+  }
+
+  Future<void> saveTokenToDatabase(String token) async {
+    // Assume user is logged in for this example
+    String userId = FirebaseAuth.instance.currentUser.uid;
+
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'tokens': token,
+    });
+  }
+
+  double calculateDistance(lat1, lon1, lat2, lon2) {
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
+  }
+
+  String constructFCMPayload(String token, String fullname, String message) {
+    return jsonEncode({
+      'token': token,
+      'notification': {
+        'title': '$fullname đang cần trợ giúp!',
+        'body': message,
+      },
+    });
+  }
+
+  Future<void> sendPushMessage(
+      String token, String fullname, String message) async {
+    try {
+      await http.post(
+        Uri.parse('https://sosmap.herokuapp.com/api/fcm/sosmap'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: constructFCMPayload(token, fullname, message),
+      );
+      print('FCM request for device sent!');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> sendNotification(RequestModel requestModel) async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    snapshot.docs.forEach((element) {
+      UserModel userModel = UserModel.fromDocument(element);
+      if (userModel.lat != null &&
+          userModel.lng != null &&
+          userModel.tokens != null) {
+        double distance = calculateDistance(
+            requestModel.place.location.latitude,
+            requestModel.place.location.longitude,
+            userModel.lat,
+            userModel.lng);
+        if (distance < 5.0) {
+          String token = userModel.tokens;
+          sendPushMessage(token, requestModel.name ?? "Tôi",
+              requestModel.message ?? "Hãy đến trợ giúp tôi nhé!");
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
-
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -280,37 +404,43 @@ class FullMapState extends State<FullMap> {
                   if (snapshot.hasData) {
                     RequestModel userNeedHelp;
                     RequestModel myHelp;
+                    mapController.clearSymbols();
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
-                      Symbol symbol = (mapController.symbols != null &&
-                              mapController.symbols.length > 0)
-                          ? mapController.symbols?.firstWhere(
-                              (element) =>
-                                  RequestModel.fromJson(element.data).userId ==
-                                  newRequest.userId,
-                              orElse: () => null)
-                          : null;
-                      if (symbol == null)
-                        _add(LatLng(newRequest.lat, newRequest.lng),
-                            newRequest.toJson());
-                      else {
-                        Map<String, dynamic> requestJson = newRequest.toJson();
-                        Map<String, dynamic> symbolDataJson = symbol.data;
-                        if (mapEquals(requestJson, symbolDataJson)) {
-                        } else {
-                          _remove(symbol);
-                          _add(LatLng(newRequest.lat, newRequest.lng),
-                              newRequest.toJson());
-                        }
-                      }
+                      if (newRequest.place != null) {
+                        _add(newRequest.place.location, newRequest.toJson());
+                        // Symbol symbol = (mapController.symbols != null &&
+                        //         mapController.symbols.length > 0)
+                        //     ? mapController.symbols?.firstWhere(
+                        //         (element) =>
+                        //             RequestModel.fromJson(element.data)
+                        //                 .userId ==
+                        //             newRequest.userId,
+                        //         orElse: () => null)
+                        //     : null;
+                        // if (symbol == null)
+                        //   _add(LatLng(newRequest.lat, newRequest.lng),
+                        //       newRequest.toJson());
+                        // else {
+                        //   Map<String, dynamic> requestJson =
+                        //       newRequest.toJson();
+                        //   Map<String, dynamic> symbolDataJson = symbol.data;
+                        //   if (mapEquals(requestJson, symbolDataJson)) {
+                        //   } else {
+                        //     _remove(symbol);
+                        //     _add(LatLng(newRequest.lat, newRequest.lng),
+                        //         newRequest.toJson());
+                        //   }
+                        // }
 
-                      // Nếu đang trợ giúp ai đó
-                      if (newRequest.helperId == appState.user.userId &&
-                          newRequest.status == "waiting") {
-                        userNeedHelp = newRequest;
-                      }
-                      if (newRequest.userId == appState.user.userId) {
-                        myHelp = newRequest;
+                        // Nếu đang trợ giúp ai đó
+                        if (newRequest.helperId == appState.user.userId &&
+                            newRequest.status == "waiting") {
+                          userNeedHelp = newRequest;
+                        }
+                        if (newRequest.userId == appState.user.userId) {
+                          myHelp = newRequest;
+                        }
                       }
                     });
                     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -329,9 +459,11 @@ class FullMapState extends State<FullMap> {
                 requestModel: RequestModel.fromJson(_selectedSymbol.data),
                 onCloseBtn: _onUnSelectedSymbol,
                 onOpenMapBtn: () {
-                  setState(() {
-                    //listUser[0].user.rate = Random().nextDouble() * 5;
-                  });
+                  WeMapPlace mylocation = WeMapPlace(location: myLatLng);
+                  WeMapPlace destination =
+                      RequestModel.fromJson(_selectedSymbol.data).place;
+                  Navigator.pushNamed(context, '/route-page',
+                      arguments: ScreenRouteArguments(mylocation, destination));
                 },
                 onConfirmBtn: () {
                   _confirmHelp(RequestModel.fromJson(_selectedSymbol.data));
@@ -346,6 +478,7 @@ class FullMapState extends State<FullMap> {
                 child: HelpInfo(
                   helpRequest: _userNeedHelp,
                   haveHelpRequest: false,
+                  myLocation: myLatLng,
                 ),
               ),
             ),
@@ -356,6 +489,7 @@ class FullMapState extends State<FullMap> {
                 child: HelpInfo(
                   helpRequest: _myHelpRequest,
                   haveHelpRequest: true,
+                  myLocation: myLatLng,
                 ),
               ),
             )
@@ -406,7 +540,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.place),
             backgroundColor: Colors.orange,
             label: 'Chỉ đường',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () => Navigator.pushNamed(context, '/route-page'),
             onLongPress: () => print('FIRST CHILD LONG PRESS'),
           ),
@@ -414,7 +549,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.call),
             backgroundColor: Colors.orange,
             label: 'Gọi trợ giúp',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () {
               Alert(
                   context: context,
@@ -454,6 +590,8 @@ class FullMapState extends State<FullMap> {
                               .doc(appState.user.userId)
                               .set(_createHelpPopup.requestModel.toJson())
                               .then((value) {
+                            //Send notification
+                            sendNotification(_createHelpPopup.requestModel);
                             Navigator.of(context).pop();
                             Alert(
                               context: context,
@@ -509,7 +647,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.gps_fixed),
             backgroundColor: Colors.orange,
             label: 'Cập nhật vị trí',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () => _getCurrentLocation(),
             onLongPress: () => print('SECOND CHILD LONG PRESS'),
           ),

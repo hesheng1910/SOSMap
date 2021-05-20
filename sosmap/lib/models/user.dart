@@ -23,6 +23,7 @@ class UserModel {
   double rate;
   double lat;
   double lng;
+  String tokens;
 
   UserModel(
       {this.userId,
@@ -31,7 +32,8 @@ class UserModel {
       this.tel,
       this.rate,
       this.lat,
-      this.lng});
+      this.lng,
+      this.tokens});
 
   factory UserModel.fromJson(Map<String, dynamic> json) => new UserModel(
       userId: json["userId"],
@@ -40,7 +42,8 @@ class UserModel {
       tel: json["tel"],
       rate: json["rate"],
       lat: json["lat"],
-      lng: json["lng"]);
+      lng: json["lng"],
+      tokens: json["tokens"]);
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
@@ -49,7 +52,8 @@ class UserModel {
         "tel": tel,
         "rate": rate,
         "lat": lat,
-        "lng": lng
+        "lng": lng,
+        "tokens": tokens,
       };
 
   factory UserModel.fromDocument(DocumentSnapshot doc) {

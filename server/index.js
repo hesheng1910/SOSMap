@@ -43,6 +43,9 @@ app.post("/api/fcm/sosmap", (req, res, next) => {
     console.log(req.body)
     res.sendStatus(200);
    });
-app.listen(3000, () => {
+app.get("/", (req, res, next) => {
+    res.send('SOSMap');
+})
+app.listen(process.env.PORT || 3000, () => {
  console.log("Server running on port 3000");
 });

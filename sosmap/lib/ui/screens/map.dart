@@ -348,7 +348,7 @@ class FullMapState extends State<FullMap> {
       String token, String fullname, String message) async {
     try {
       await http.post(
-        Uri.parse('https://api.rnfirebase.io/messaging/send'),
+        Uri.parse('https://sosmap.herokuapp.com/api/fcm/sosmap'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
@@ -21,7 +22,6 @@ import 'package:wemapgl/wemapgl.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 class FullMap extends StatefulWidget {
@@ -68,11 +68,8 @@ class FullMapState extends State<FullMap> {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   @override
-  void initState() async {
-    String token = await FirebaseMessaging.instance.getToken();
-    await saveTokenToDatabase(token);
-    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
-
+  void initState() {
+    initTokenFCM();
     FirebaseMessaging.instance
         .getInitialMessage()
         .then((RemoteMessage message) {
@@ -84,6 +81,7 @@ class FullMapState extends State<FullMap> {
       RemoteNotification notification = message.notification;
       AndroidNotification android = message.notification?.android;
       if (notification != null && android != null) {
+        FlutterAppBadger.updateBadgeCount(1);
         flutterLocalNotificationsPlugin.show(
             notification.hashCode,
             notification.title,
@@ -95,13 +93,15 @@ class FullMapState extends State<FullMap> {
                 channel.description,
                 // TODO add a proper drawable resource to android, for now using
                 //      one that already exists in example app.
-                icon: 'launch_background',
+                //icon: 'launch_background',
+                color: Color.fromRGBO(0, 144, 74, 1),
               ),
             ));
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      FlutterAppBadger.removeBadge();
       print('A new onMessageOpenedApp event was published!');
     });
 
@@ -316,12 +316,18 @@ class FullMapState extends State<FullMap> {
     }
   }
 
+  Future<void> initTokenFCM() async {
+    String token = await FirebaseMessaging.instance.getToken();
+    await saveTokenToDatabase(token);
+    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
+  }
+
   Future<void> saveTokenToDatabase(String token) async {
     // Assume user is logged in for this example
     String userId = FirebaseAuth.instance.currentUser.uid;
 
     await FirebaseFirestore.instance.collection('users').doc(userId).update({
-      'tokens': FieldValue.arrayUnion([token]),
+      'tokens': token,
     });
   }
 
@@ -365,11 +371,16 @@ class FullMapState extends State<FullMap> {
         await FirebaseFirestore.instance.collection('users').get();
     snapshot.docs.forEach((element) {
       UserModel userModel = UserModel.fromDocument(element);
-      double distance = calculateDistance(requestModel.place.location.latitude,
-          requestModel.place.location.longitude, userModel.lat, userModel.lng);
-      if (distance < 5.0) {
-        String token = userModel.tokens;
-        if (token != null) {
+      if (userModel.lat != null &&
+          userModel.lng != null &&
+          userModel.tokens != null) {
+        double distance = calculateDistance(
+            requestModel.place.location.latitude,
+            requestModel.place.location.longitude,
+            userModel.lat,
+            userModel.lng);
+        if (distance < 5.0) {
+          String token = userModel.tokens;
           sendPushMessage(token, requestModel.name ?? "Tôi",
               requestModel.message ?? "Hãy đến trợ giúp tôi nhé!");
         }

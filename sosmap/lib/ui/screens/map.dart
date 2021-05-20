@@ -1,11 +1,17 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
+import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
+import 'package:sosmap/ui/widgets/help_info.dart';
+import 'package:sosmap/util/auth.dart';
+import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
+import 'package:sosmap/wemap/route.dart';
 import 'package:wemapgl/wemapgl.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -31,16 +37,24 @@ class FullMapState extends State<FullMap> {
   CameraPosition _position;
   bool _isMoving;
 
-  LatLng myLatLng = LatLng(21.038282, 105.782885);
+  LatLng myLatLng;
   bool reverse = true;
   WeMapPlace place;
 
-  int _symbolCount = 0;
+  //int _symbolCount;
   Symbol _selectedSymbol;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  WeMapDirections directionAPI = WeMapDirections();
+
+  Stream<QuerySnapshot> listRequest;
+  bool _isDrawRouter = false;
+  RequestModel _userNeedHelp;
+  RequestModel _myHelpRequest;
   @override
   void initState() {
     _position = _kInitialPosition;
-    _isMoving = false;
+    _isMoving = true;
+    listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
     weMap = WeMap(
       initialCameraPosition: _kInitialPosition,
       onMapCreated: onMapCreated,
@@ -54,21 +68,10 @@ class FullMapState extends State<FullMap> {
       tiltGesturesEnabled: true,
       zoomGesturesEnabled: true,
       myLocationEnabled: true,
-      onStyleLoadedCallback: () => print('map style loaded'),
-      // myLocationTrackingMode: _myLocationTrackingMode,
-      // myLocationRenderMode: MyLocationRenderMode.GPS,
+      onStyleLoadedCallback: () => _getCurrentLocation(),
       reverse: false,
-      // onPlaceCardClose: () => print("close card"),
-      // onMapClick: (point, latlng, place) {
-      //   print(point);
-      //   _onUnSelectedSymbol();
-      // },
-      // onCameraTrackingDismissed: () {
-      //   this.setState(() {
-      //     _myLocationTrackingMode = MyLocationTrackingMode.None;
-      //   });
-      // }
     );
+
     super.initState();
   }
 
@@ -88,8 +91,10 @@ class FullMapState extends State<FullMap> {
   }
 
   void _onMapChanged() {
-    setState(() {
-      _extractMapInfo();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _extractMapInfo();
+      });
     });
   }
 
@@ -127,22 +132,23 @@ class FullMapState extends State<FullMap> {
   }
 
   Future<void> _add(LatLng latlng, Map<String, dynamic> requestData) async {
+    if (mapController == null) return;
     await mapController.addSymbol(
         SymbolOptions(
           geometry: latlng,
           iconImage: "assets/symbols/help.png",
         ),
         requestData);
-    setState(() {
-      _symbolCount += 1;
-    });
+    // setState(() {
+    //   _symbolCount += 1;
+    // });
   }
 
   void _remove(Symbol symbol) {
     mapController.removeSymbol(symbol);
-    setState(() {
-      _symbolCount -= 1;
-    });
+    // setState(() {
+    //   _symbolCount -= 1;
+    // });
   }
 
   void _changePosition() {
@@ -169,6 +175,92 @@ class FullMapState extends State<FullMap> {
         zoom: 14.0,
       ),
     ));
+    _updateCurrentLocation();
+  }
+
+  Future<void> _updateCurrentLocation() async {
+    LatLng myLocation = await mapController.requestMyLocationLatLng();
+    setState(() {
+      myLatLng = myLocation;
+    });
+    UserModel newUser = appState.user;
+    newUser.lat = myLocation.latitude;
+    newUser.lng = myLocation.longitude;
+    Auth.updateUser(newUser);
+    StateWidget.of(context).initUser();
+  }
+
+  Future<void> _confirmHelp(RequestModel requestModel) {
+    RequestModel newRequest = requestModel;
+    newRequest.helperId = appState.user.userId;
+    newRequest.status = "waiting";
+    RequestAPI.editRequestDB(newRequest);
+  }
+
+  void _updateHelper(RequestModel requestModel) {
+    setState(() {
+      _userNeedHelp = requestModel;
+    });
+  }
+
+  void _updateMyHelp(RequestModel requestModel) {
+    setState(() {
+      _myHelpRequest = requestModel;
+    });
+  }
+
+  void _drawRoute() async {
+    if (_isDrawRouter) {
+      if (_userNeedHelp == null) {
+        mapController.clearCircles();
+        mapController.clearLines();
+      }
+      return;
+    }
+    if (_userNeedHelp == null || _userNeedHelp.place == null) return;
+    if (myLatLng == null) {
+      await _updateCurrentLocation();
+      if (myLatLng == null) {
+        print("Không lấy được vị trí");
+        return;
+      }
+    }
+    mapController.clearCircles();
+    mapController.clearLines();
+    List<LatLng> points = [];
+    points.add(myLatLng);
+    points.add(_userNeedHelp.place.location);
+    final json = await directionAPI.getResponseMultiRoute(
+        0, points); //0 = car, 1 = bike, 2 = foot
+    List<LatLng> _route = directionAPI.getRoute(json);
+    List<LatLng> _waypoins = directionAPI.getWayPoints(json);
+    if (_route != null) {
+      await mapController.addLine(
+        LineOptions(
+          geometry: _route,
+          lineColor: "#00904a",
+          lineWidth: 5.0,
+          lineOpacity: 1,
+        ),
+      );
+      await mapController.addCircle(CircleOptions(
+          geometry: _waypoins[0],
+          circleRadius: 8.0,
+          circleColor: '#d3d3d3',
+          circleStrokeWidth: 1.5,
+          circleStrokeColor: '#00904a'));
+      for (int i = 1; i < _waypoins.length; i++) {
+        await mapController.addCircle(CircleOptions(
+            geometry: _waypoins[i],
+            circleRadius: 8.0,
+            circleColor: '#ffffff',
+            circleStrokeWidth: 1.5,
+            circleStrokeColor: '#00904a'));
+      }
+      setState(() {
+        _isDrawRouter = true;
+      });
+    }
   }
 
   @override
@@ -176,32 +268,66 @@ class FullMapState extends State<FullMap> {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
 
-    // if (mapController != null &&
-    //     mapController.symbols != null &&
-    //     mapController.symbols.length > 0)
-    //   mapController.symbols.forEach((element) {
-    //     _remove(element);
-    //   });
-
-    CollectionReference requestModels =
-        FirebaseFirestore.instance.collection('requests');
-    requestModels.snapshots().listen((result) {
-      result.docs.forEach((request) {
-        RequestModel requestData = RequestModel.fromJson(request.data());
-        if (mapController.symbols.firstWhere(
-                (element) =>
-                    element.data["lat"] == requestData.lat &&
-                    element.data["lng"] == requestData.lng,
-                orElse: () => null) ==
-            null)
-          _add(LatLng(requestData.lat, requestData.lng), requestData.toJson());
-      });
-    });
-
-    return new Scaffold(
+    return Scaffold(
+      key: _scaffoldKey,
       body: Stack(
         children: <Widget>[
-          if (weMap != null) weMap,
+          if (weMap != null)
+            StreamBuilder<QuerySnapshot>(
+                stream: listRequest,
+                builder: (BuildContext context,
+                    AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData) {
+                    RequestModel userNeedHelp;
+                    RequestModel myHelp;
+                    mapController.clearSymbols();
+                    snapshot.data.docs.forEach((data) {
+                      RequestModel newRequest = RequestModel.fromDocument(data);
+                      if (newRequest.place != null) {
+                        _add(newRequest.place.location, newRequest.toJson());
+                        // Symbol symbol = (mapController.symbols != null &&
+                        //         mapController.symbols.length > 0)
+                        //     ? mapController.symbols?.firstWhere(
+                        //         (element) =>
+                        //             RequestModel.fromJson(element.data)
+                        //                 .userId ==
+                        //             newRequest.userId,
+                        //         orElse: () => null)
+                        //     : null;
+                        // if (symbol == null)
+                        //   _add(LatLng(newRequest.lat, newRequest.lng),
+                        //       newRequest.toJson());
+                        // else {
+                        //   Map<String, dynamic> requestJson =
+                        //       newRequest.toJson();
+                        //   Map<String, dynamic> symbolDataJson = symbol.data;
+                        //   if (mapEquals(requestJson, symbolDataJson)) {
+                        //   } else {
+                        //     _remove(symbol);
+                        //     _add(LatLng(newRequest.lat, newRequest.lng),
+                        //         newRequest.toJson());
+                        //   }
+                        // }
+
+                        // Nếu đang trợ giúp ai đó
+                        if (newRequest.helperId == appState.user.userId &&
+                            newRequest.status == "waiting") {
+                          userNeedHelp = newRequest;
+                        }
+                        if (newRequest.userId == appState.user.userId) {
+                          myHelp = newRequest;
+                        }
+                      }
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _updateHelper(userNeedHelp);
+                      _updateMyHelp(myHelp);
+                    });
+                  }
+
+                  _drawRoute();
+                  return weMap;
+                }),
           if (_selectedSymbol != null)
             new Container(
               alignment: Alignment.center,
@@ -209,37 +335,40 @@ class FullMapState extends State<FullMap> {
                 requestModel: RequestModel.fromJson(_selectedSymbol.data),
                 onCloseBtn: _onUnSelectedSymbol,
                 onOpenMapBtn: () {
-                  setState(() {
-                    //listUser[0].user.rate = Random().nextDouble() * 5;
-                  });
+                  WeMapPlace mylocation = WeMapPlace(location: myLatLng);
+                  WeMapPlace destination =
+                      RequestModel.fromJson(_selectedSymbol.data).place;
+                  Navigator.pushNamed(context, '/route-page',
+                      arguments: ScreenRouteArguments(mylocation, destination));
                 },
-                onConfirmBtn: () => {},
+                onConfirmBtn: () {
+                  _confirmHelp(RequestModel.fromJson(_selectedSymbol.data));
+                  _onUnSelectedSymbol();
+                },
               ),
             ),
-          WeMapSearchBar(
-            location: myLatLng,
-            onSelected: (_place) {
-              setState(() {
-                place = _place;
-                print(_place.placeName);
-              });
-              mapController.moveCamera(
-                CameraUpdate.newCameraPosition(
-                  CameraPosition(
-                    target: place.location,
-                    zoom: 14.0,
-                  ),
+          if (_userNeedHelp != null)
+            new SafeArea(
+              child: Container(
+                alignment: Alignment.topCenter,
+                child: HelpInfo(
+                  helpRequest: _userNeedHelp,
+                  haveHelpRequest: false,
+                  myLocation: myLatLng,
                 ),
-              );
-              mapController.showPlaceCard?.call(place);
-            },
-            onClearInput: () {
-              setState(() {
-                place = null;
-                //mapController.showPlaceCard(place);
-              });
-            },
-          ),
+              ),
+            ),
+          if (_myHelpRequest != null)
+            new SafeArea(
+              child: Container(
+                alignment: Alignment.topCenter,
+                child: HelpInfo(
+                  helpRequest: _myHelpRequest,
+                  haveHelpRequest: true,
+                  myLocation: myLatLng,
+                ),
+              ),
+            )
         ],
       ),
       floatingActionButton: SpeedDial(
@@ -287,7 +416,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.place),
             backgroundColor: Colors.orange,
             label: 'Chỉ đường',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () => Navigator.pushNamed(context, '/route-page'),
             onLongPress: () => print('FIRST CHILD LONG PRESS'),
           ),
@@ -295,7 +425,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.call),
             backgroundColor: Colors.orange,
             label: 'Gọi trợ giúp',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () {
               Alert(
                   context: context,
@@ -326,50 +457,55 @@ class FullMapState extends State<FullMap> {
                   ),
                   buttons: [
                     DialogButton(
-                      onPressed: () => {
-                        FirebaseFirestore.instance
-                            .collection('requests')
-                            .doc()
-                            .set(_createHelpPopup.requestModel.toJson())
-                            .then((value) {
-                          Navigator.of(context).pop();
-                          Alert(
-                            context: context,
-                            title: "Thông báo",
-                            type: AlertType.success,
-                            style: AlertStyle(isCloseButton: false),
-                            content: Text('Tạo yêu cầu trợ giúp thành công'),
-                            buttons: [
-                              DialogButton(
-                                  child: Text(
-                                    'Đóng',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 16),
-                                  ),
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  color: Colors.green)
-                            ],
-                          ).show();
-                        }).catchError((error) => Alert(
-                                    context: context,
-                                    title: "Thông báo",
-                                    type: AlertType.error,
-                                    style: AlertStyle(isCloseButton: false),
-                                    content: Text(
-                                        'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
-                                    buttons: [
-                                      DialogButton(
-                                          child: Text(
-                                            'Đóng',
-                                            style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 16),
-                                          ),
-                                          onPressed: () =>
-                                              Navigator.of(context).pop(),
-                                          color: Colors.red)
-                                    ]).show())
-                        //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
+                      onPressed: () {
+                        if (_createHelpPopup.formKey.currentState.validate()) {
+                          _createHelpPopup.requestModel.createAt =
+                              Timestamp.now();
+                          FirebaseFirestore.instance
+                              .collection('requests')
+                              .doc(appState.user.userId)
+                              .set(_createHelpPopup.requestModel.toJson())
+                              .then((value) {
+                            Navigator.of(context).pop();
+                            Alert(
+                              context: context,
+                              title: "Thông báo",
+                              type: AlertType.success,
+                              style: AlertStyle(isCloseButton: false),
+                              content: Text('Tạo yêu cầu trợ giúp thành công'),
+                              buttons: [
+                                DialogButton(
+                                    child: Text(
+                                      'Đóng',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                    ),
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    color: Colors.green)
+                              ],
+                            ).show();
+                          }).catchError((error) => Alert(
+                                      context: context,
+                                      title: "Thông báo",
+                                      type: AlertType.error,
+                                      style: AlertStyle(isCloseButton: false),
+                                      content: Text(
+                                          'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
+                                      buttons: [
+                                        DialogButton(
+                                            child: Text(
+                                              'Đóng',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16),
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.of(context).pop(),
+                                            color: Colors.red)
+                                      ]).show());
+                          //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
+                        }
                       },
                       child: Text(
                         "Tạo yêu cầu",
@@ -385,7 +521,8 @@ class FullMapState extends State<FullMap> {
             child: Icon(Icons.gps_fixed),
             backgroundColor: Colors.orange,
             label: 'Cập nhật vị trí',
-            labelStyle: TextStyle(fontSize: 18.0),
+            labelStyle: TextStyle(fontSize: 16.0, color: Colors.black),
+            labelBackgroundColor: Colors.white,
             onTap: () => _getCurrentLocation(),
             onLongPress: () => print('SECOND CHILD LONG PRESS'),
           ),

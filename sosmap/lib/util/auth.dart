@@ -33,6 +33,20 @@ class Auth {
     });
   }
 
+  static void updateUser(UserModel user) {
+    checkUserExist(user.userId).then((value) {
+      if (!value) {
+        print("Không tồn tại user");
+      } else {
+        print("update user thành công");
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.userId)
+            .update(user.toJson());
+      }
+    });
+  }
+
   static Future<bool> checkUserExist(String userId) async {
     bool exists = false;
     try {

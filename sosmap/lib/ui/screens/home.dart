@@ -36,10 +36,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
-    if (!appState.isLoading &&
-        (appState.firebaseUserAuth == null ||
-            appState.user == null ||
-            appState.settings == null)) {
+    if (appState == null) return SignInScreen();
+    if ((appState.firebaseUserAuth == null ||
+        appState.user == null ||
+        appState.settings == null)) {
       return SignInScreen();
     } else {
       if (appState.isLoading) {

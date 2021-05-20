@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sosmap/models/user.dart';
+import 'package:wemapgl/wemapgl.dart';
 
 // To parse this JSON data, do
 //
@@ -17,51 +17,53 @@ String requestToJson(RequestModel data) {
 }
 
 class RequestModel {
-  UserModel user;
+  String userId;
   String name;
   String tel;
-  double lat;
-  double lng;
+  WeMapPlace place;
   String reason; //Tai nạn, Hỏng xe, Hết xăng, ...
   String message;
   String status;
-  UserModel helper;
-  DateTime createAt;
+  String helperId;
+  String price;
+  Timestamp createAt;
 
   RequestModel(
-      {this.user,
+      {this.userId,
       this.name,
       this.tel,
-      this.lat,
-      this.lng,
+      this.place,
       this.reason,
       this.message,
-      this.helper,
+      this.helperId,
       this.status,
+      this.price,
       this.createAt});
 
   factory RequestModel.fromJson(Map<String, dynamic> json) => new RequestModel(
-      user: UserModel.fromJson(json["user"]),
+      userId: json["userId"],
       name: json["name"],
       tel: json["tel"],
-      lat: json["lat"],
-      lng: json["lng"],
+      place: json["place"] != null
+          ? WeMapPlace.fromMapObject(json["place"])
+          : null,
       reason: json["reason"],
       message: json["message"],
       status: json["status"],
-      helper: json["helper"],
+      helperId: json["helperId"],
+      price: json["price"],
       createAt: json["createAt"]);
 
   Map<String, dynamic> toJson() => {
-        "user": user.toJson(),
+        "userId": userId,
         "name": name,
         "tel": tel,
-        "lat": lat,
-        "lng": lng,
+        "place": place?.toMap(),
         "reason": reason,
         "message": message,
-        "helper": helper,
+        "helperId": helperId,
         "status": status,
+        "price": price,
         "createAt": createAt
       };
 
@@ -70,6 +72,6 @@ class RequestModel {
   }
   @override
   String toString() {
-    return "UserId: ${user.userId}\n Name: ${name}\n Tel: ${tel} \nlat: ${lat} \nlng: ${lng} \nreason: ${reason} \nmessage: ${message}";
+    return "UserId: ${userId}\n Name: ${name}\n Tel: ${tel} \nlat: \nreason: ${reason} \nmessage: ${message}";
   }
 }

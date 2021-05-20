@@ -92,6 +92,19 @@ class Auth {
     }
   }
 
+  static Future<void> updateUserFirestore(String userId, var data) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'fullName': data['fullName'],
+        'tel': data['telephone'],
+        'email': data['email']
+      });
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
+  }
+
   static Future<SettingModels> getSettingsFirestore(String settingsId) async {
     if (settingsId != null) {
       return FirebaseFirestore.instance

@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/models/user.dart';
@@ -13,6 +18,7 @@ import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/wemap/route.dart';
 import 'package:wemapgl/wemapgl.dart';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
@@ -50,8 +56,55 @@ class FullMapState extends State<FullMap> {
   bool _isDrawRouter = false;
   RequestModel _userNeedHelp;
   RequestModel _myHelpRequest;
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  final AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'high_importance_channel', // id
+    'High Importance Notifications', // title
+    'This channel is used for important notifications.', // description
+    importance: Importance.high,
+  );
+
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
   @override
-  void initState() {
+  void initState() async {
+    String token = await FirebaseMessaging.instance.getToken();
+    await saveTokenToDatabase(token);
+    FirebaseMessaging.instance.onTokenRefresh.listen(saveTokenToDatabase);
+
+    FirebaseMessaging.instance
+        .getInitialMessage()
+        .then((RemoteMessage message) {
+      if (message != null) {
+        print('Có notification');
+      }
+    });
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification notification = message.notification;
+      AndroidNotification android = message.notification?.android;
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                channel.description,
+                // TODO add a proper drawable resource to android, for now using
+                //      one that already exists in example app.
+                icon: 'launch_background',
+              ),
+            ));
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('A new onMessageOpenedApp event was published!');
+    });
+
     _position = _kInitialPosition;
     _isMoving = true;
     listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
@@ -263,11 +316,71 @@ class FullMapState extends State<FullMap> {
     }
   }
 
+  Future<void> saveTokenToDatabase(String token) async {
+    // Assume user is logged in for this example
+    String userId = FirebaseAuth.instance.currentUser.uid;
+
+    await FirebaseFirestore.instance.collection('users').doc(userId).update({
+      'tokens': FieldValue.arrayUnion([token]),
+    });
+  }
+
+  double calculateDistance(lat1, lon1, lat2, lon2) {
+    var p = 0.017453292519943295;
+    var c = cos;
+    var a = 0.5 -
+        c((lat2 - lat1) * p) / 2 +
+        c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
+    return 12742 * asin(sqrt(a));
+  }
+
+  String constructFCMPayload(String token, String fullname, String message) {
+    return jsonEncode({
+      'token': token,
+      'notification': {
+        'title': '$fullname đang cần trợ giúp!',
+        'body': message,
+      },
+    });
+  }
+
+  Future<void> sendPushMessage(
+      String token, String fullname, String message) async {
+    try {
+      await http.post(
+        Uri.parse('https://api.rnfirebase.io/messaging/send'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: constructFCMPayload(token, fullname, message),
+      );
+      print('FCM request for device sent!');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> sendNotification(RequestModel requestModel) async {
+    QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('users').get();
+    snapshot.docs.forEach((element) {
+      UserModel userModel = UserModel.fromDocument(element);
+      double distance = calculateDistance(requestModel.place.location.latitude,
+          requestModel.place.location.longitude, userModel.lat, userModel.lng);
+      if (distance < 5.0) {
+        String token = userModel.tokens;
+        if (token != null) {
+          sendPushMessage(token, requestModel.name ?? "Tôi",
+              requestModel.message ?? "Hãy đến trợ giúp tôi nhé!");
+        }
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
-
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -466,6 +579,8 @@ class FullMapState extends State<FullMap> {
                               .doc(appState.user.userId)
                               .set(_createHelpPopup.requestModel.toJson())
                               .then((value) {
+                            //Send notification
+                            sendNotification(_createHelpPopup.requestModel);
                             Navigator.of(context).pop();
                             Alert(
                               context: context,

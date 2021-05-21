@@ -43,7 +43,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final fullName = TextFormField(
       autofocus: false,
-      obscureText: true,
       controller: _fullName,
       validator: Validator.validateName,
       decoration: InputDecoration(
@@ -86,7 +85,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final phoneNumber = TextFormField(
       keyboardType: TextInputType.phone,
       autofocus: false,
-      obscureText: true,
       controller: _phoneNumber,
       validator: Validator.validatePhoneNumber,
       decoration: InputDecoration(
@@ -128,8 +126,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final email = TextFormField(
       autofocus: false,
-      obscureText: true,
       controller: _email,
+      keyboardType: TextInputType.emailAddress,
       validator: Validator.validateEmail,
       decoration: InputDecoration(
         filled: true,
@@ -313,12 +311,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
         //need await so it has chance to go through error if found.
         await Auth.signUp(email, password).then((uID) {
           Auth.addUserSettingsDB(new UserModel(
-            userId: uID,
-            email: email,
-            fullName: fullName,
-            tel: phoneNumber, 
-            rate: 5
-          ));
+              userId: uID,
+              email: email,
+              fullName: fullName,
+              tel: phoneNumber,
+              rate: 5));
         });
         //now automatically login user too
         //await StateWidget.of(context).logInUser(email, password);

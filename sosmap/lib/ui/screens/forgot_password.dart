@@ -39,8 +39,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     final email = TextFormField(
       autofocus: false,
-      obscureText: true,
       controller: _email,
+      keyboardType: TextInputType.emailAddress,
       validator: Validator.validateEmail,
       decoration: InputDecoration(
         filled: true,
@@ -54,7 +54,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ), // icon is 48px widget.
         hintText: 'Email',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(5.0),
+            borderSide: new BorderSide(color: Theme.of(context).primaryColor)),
       ),
       style: TextStyle(color: Theme.of(context).primaryColor),
       cursorColor: Theme.of(context).primaryColor,

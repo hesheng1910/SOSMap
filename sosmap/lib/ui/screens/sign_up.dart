@@ -33,7 +33,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           radius: 60.0,
           child: ClipOval(
             child: Image.asset(
-              'assets/images/default.png',
+              'assets/images/as.png',
               fit: BoxFit.cover,
               width: 120.0,
               height: 120.0,
@@ -62,14 +62,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final phoneNumber = TextFormField(
       autofocus: false,
-      
+      keyboardType: TextInputType.phone,
       controller: _phoneNumber,
       validator: Validator.validatePhoneNumber,
       decoration: InputDecoration(
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
-            Icons.person,
+            Icons.phone,
             color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
@@ -205,7 +205,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
             userId: uID,
             email: email,
             fullName: fullName,
-            tel: phoneNumber
+            tel: phoneNumber, 
+            rate: 5
           ));
         });
         //now automatically login user too

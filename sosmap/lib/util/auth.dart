@@ -174,22 +174,22 @@ class Auth {
     if (e is PlatformException) {
       switch (e.message) {
         case 'There is no user record corresponding to this identifier. The user may have been deleted.':
-          return 'User with this email address not found.';
+          return 'Không tồn tại tài khoản sử dụng Email này.';
           break;
         case 'The password is invalid or the user does not have a password.':
-          return 'Invalid password.';
+          return 'Mật khẩu không hợp lệ.';
           break;
         case 'A network error (such as timeout, interrupted connection or unreachable host) has occurred.':
-          return 'No internet connection.';
+          return 'Không có kết nối mạng.';
           break;
         case 'The email address is already in use by another account.':
-          return 'This email address already has an account.';
+          return 'Email này đã được sử dụng cho một tài khoản khác.';
           break;
         default:
-          return 'Unknown error occured.';
+          return 'Xảy ra lỗi không xác định.';
       }
     } else {
-      return 'Unknown error occured.';
+      return 'Xảy ra lỗi không xác định.';
     }
   }
 

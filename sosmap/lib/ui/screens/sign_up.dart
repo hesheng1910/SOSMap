@@ -43,60 +43,130 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final fullName = TextFormField(
       autofocus: false,
-      textCapitalization: TextCapitalization.words,
+      obscureText: true,
       controller: _fullName,
       validator: Validator.validateName,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.person,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Họ và tên',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
 
+    // final fullName = TextFormField(
+    //   autofocus: false,
+    //   textCapitalization: TextCapitalization.words,
+    //   controller: _fullName,
+    //   validator: Validator.validateName,
+    //   decoration: InputDecoration(
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.person,
+    //         color: Colors.grey,
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Họ và tên',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
+
     final phoneNumber = TextFormField(
-      autofocus: false,
       keyboardType: TextInputType.phone,
+      autofocus: false,
+      obscureText: true,
       controller: _phoneNumber,
       validator: Validator.validatePhoneNumber,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.phone,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Số điện thoại',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
 
+    // final phoneNumber = TextFormField(
+    //   autofocus: false,
+    //   keyboardType: TextInputType.phone,
+    //   controller: _phoneNumber,
+    //   validator: Validator.validatePhoneNumber,
+    //   decoration: InputDecoration(
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.phone,
+    //         color: Colors.grey,
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Số điện thoại',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
+
     final email = TextFormField(
-      keyboardType: TextInputType.emailAddress,
       autofocus: false,
+      obscureText: true,
       controller: _email,
       validator: Validator.validateEmail,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.email,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Email',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
+
+    // final email = TextFormField(
+    //   keyboardType: TextInputType.emailAddress,
+    //   autofocus: false,
+    //   controller: _email,
+    //   validator: Validator.validateEmail,
+    //   decoration: InputDecoration(
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.email,
+    //         color: Colors.grey,
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Email',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
 
     final password = TextFormField(
       autofocus: false,
@@ -104,24 +174,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
       controller: _password,
       validator: Validator.validatePassword,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.lock,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Mật khẩu',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
+    // final password = TextFormField(
+    //   autofocus: false,
+    //   obscureText: true,
+    //   controller: _password,
+    //   validator: Validator.validatePassword,
+    //   decoration: InputDecoration(
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.lock,
+    //         color: Colors.grey,
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Mật khẩu',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
 
     final signUpButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+      child: TextButton(
+        style: ButtonStyle(
+          backgroundColor:
+              MaterialStateProperty.all(Colors.white.withOpacity(0.3)),
         ),
         onPressed: () {
           _emailSignUp(
@@ -131,16 +224,34 @@ class _SignUpScreenState extends State<SignUpScreen> {
               password: _password.text,
               context: context);
         },
-        padding: EdgeInsets.all(12),
-        color: Theme.of(context).primaryColor,
         child: Text('ĐĂNG KÝ TÀI KHOẢN', style: TextStyle(color: Colors.white)),
       ),
     );
 
+    // final signUpButton = Padding(
+    //   padding: EdgeInsets.symmetric(vertical: 16.0),
+    //   child: RaisedButton(
+    //     shape: RoundedRectangleBorder(
+    //       borderRadius: BorderRadius.circular(24),
+    //     ),
+    //     onPressed: () {
+    //       _emailSignUp(
+    //           fullName: _fullName.text,
+    //           phoneNumber: _phoneNumber.text,
+    //           email: _email.text,
+    //           password: _password.text,
+    //           context: context);
+    //     },
+    //     padding: EdgeInsets.all(12),
+    //     color: Theme.of(context).primaryColor,
+    //     child: Text('ĐĂNG KÝ TÀI KHOẢN', style: TextStyle(color: Colors.white)),
+    //   ),
+    // );
+
     final signInLabel = TextButton(
       child: Text(
         'Đăng nhập với tài khoản đã có',
-        style: TextStyle(color: Colors.black54),
+        style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
         Navigator.pushNamed(context, '/signin');
@@ -148,7 +259,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromRGBO(0, 144, 74, 1),
       body: LoadingScreen(
           child: Form(
             key: _formKey,

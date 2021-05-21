@@ -29,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           radius: 60.0,
           child: ClipOval(
             child: Image.asset(
-              'assets/images/default.png',
+              'assets/images/as.png',
               fit: BoxFit.cover,
               width: 120.0,
               height: 120.0,
@@ -67,13 +67,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         },
         padding: EdgeInsets.all(12),
         color: Theme.of(context).primaryColor,
-        child: Text('FORGOT PASSWORD', style: TextStyle(color: Colors.white)),
+        child: Text('QUÊN MẬT KHẨU', style: TextStyle(color: Colors.white)),
       ),
     );
 
     final signInLabel = TextButton(
       child: Text(
-        'Sign In',
+        'Đăng nhập',
         style: TextStyle(color: Colors.black54),
       ),
       onPressed: () {
@@ -125,17 +125,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         await Auth.forgotPasswordEmail(email);
         await _changeLoadingVisible();
         Flushbar(
-          title: "Password Reset Email Sent",
+          title: "Gửi mật khẩu đặt lại tài khoản",
           message:
-              'Check your email and follow the instructions to reset your password.',
+              'Kiểm tra Email của bạn và làm theo chỉ dẫn để đặt lại mật khẩu',
           duration: Duration(seconds: 20),
         )..show(context);
       } catch (e) {
         _changeLoadingVisible();
-        print("Forgot Password Error: $e");
+        print("Lỗi đặt lại mật khẩu: $e");
         String exception = Auth.getExceptionText(e);
         Flushbar(
-          title: "Forgot Password Error",
+          title: "Lỗi đặt lại mật khẩu",
           message: exception,
           duration: Duration(seconds: 10),
         )..show(context);

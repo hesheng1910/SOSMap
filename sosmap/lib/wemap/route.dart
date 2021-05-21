@@ -5,8 +5,8 @@ import 'package:wemapgl/wemapgl.dart';
 import 'ePage.dart';
 
 class ScreenRouteArguments {
-  final WeMapPlace origin;
-  final WeMapPlace destination;
+  WeMapPlace origin;
+  WeMapPlace destination;
 
   ScreenRouteArguments(this.origin, this.destination);
 }
@@ -32,10 +32,13 @@ class RoutingState extends State<Routing> {
 //    _panelOpened = size.height - MediaQuery.of(context).padding.top;
     final args =
         ModalRoute.of(context).settings.arguments as ScreenRouteArguments;
-    return WeMapDirection(
+    WeMapDirection weMapDirection = WeMapDirection(
         originIcon: "assets/symbols/origin.png",
-        destinationIcon: "assets/symbols/destination.png",
-        originPlace: args.origin,
-        destinationPlace: args.destination);
+        destinationIcon: "assets/symbols/destination.png");
+    if (args?.origin != null) weMapDirection.originPlace = args.origin;
+    if (args?.destination != null)
+      weMapDirection.destinationPlace = args.destination;
+
+    return weMapDirection;
   }
 }

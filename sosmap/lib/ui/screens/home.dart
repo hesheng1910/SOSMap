@@ -15,23 +15,27 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   StateModel appState;
   bool _loadingVisible = false;
+
   @override
   void initState() {
+    getPermissions();
     super.initState();
   }
 
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) async {
-    final location = Location();
-    final hasPermissions = await location.hasPermission();
-    if (hasPermissions != PermissionStatus.GRANTED) {
-      if (index == 0 || index == 1) await location.requestPermission();
-    }
-
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  void getPermissions() async {
+    final location = Location();
+    final hasPermissions = await location.hasPermission();
+    if (hasPermissions != PermissionStatus.GRANTED) {
+      await location.requestPermission();
+    }
   }
 
   Widget build(BuildContext context) {
@@ -47,17 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         _loadingVisible = false;
       }
-
-//check for null https://stackoverflow.com/questions/49775261/check-null-in-ternary-operation
-      // final userId = appState?.firebaseUserAuth?.uid ?? '';
-      // final email = appState?.firebaseUserAuth?.email ?? '';
-      // final fullName = appState?.user?.fullName ?? '';
-      // final settingsId = appState?.settings?.settingsId ?? '';
-      // final userIdLabel = Text('App Id: ');
-      // final emailLabel = Text('Email: ');
-      // final fullNameLabel = Text('First Name: ');
-      // final lastNameLabel = Text('Last Name: ');
-      // final settingsIdLabel = Text('SetttingsId: ');
 
       final List<Widget> _widgetOptions = <Widget>[
         FullMap(),

@@ -1,9 +1,13 @@
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/util/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rating_bar/rating_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:sosmap/wemap/route.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -13,6 +17,7 @@ class ProfilePage extends StatefulWidget {
 class MapScreenState extends State<ProfilePage>
     with SingleTickerProviderStateMixin {
   bool _status = true;
+  bool isCurrentUser = true;
   final FocusNode myFocusNode = FocusNode();
   var currentUser;
   var user;
@@ -21,21 +26,21 @@ class MapScreenState extends State<ProfilePage>
   TextEditingController _fullName;
   double _rate;
   TextEditingController _telephone;
+  UploadTask task;
+  File _imageFile;
+  String _avatarUrl;
+  final picker = ImagePicker();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser.uid != null) {
-      getUser();
-    }
   }
 
   void getUser() async {
     try {
       user = await Auth.getUserFirestore(currentUser.uid);
-      print(user);
-      _rate = user.rate;
+      _rate = convertRating(user.rate);
+      _avatarUrl = user.avatarUrl != null ? user.avatarUrl : null;
       _email = TextEditingController(text: user.email);
       _fullName = TextEditingController(text: user.fullName);
       _telephone = TextEditingController(text: user.tel);
@@ -137,21 +142,21 @@ class MapScreenState extends State<ProfilePage>
       halfFilledIcon: Icons.star_half,
       filledIcon: Icons.star,
       emptyIcon: Icons.star_border,
-      filledColor: Colors.orange,
-      emptyColor: Colors.orange,
-      size: 24,
+      filledColor: Colors.yellow,
+      emptyColor: Colors.yellow,
     );
   }
 
   Widget _buildButtonLogout() {
     return new Visibility(
-        visible: _status,
+        visible: _status && isCurrentUser,
         child: Padding(
           padding: EdgeInsets.only(left: 20.0, top: 20.0),
           child: ElevatedButton(
             child: Text('Đăng xuất'),
-            style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.red)),
+            style: ElevatedButton.styleFrom(
+              primary: Colors.red,
+            ),
             onPressed: () {
               Auth.signOut();
               Navigator.push(
@@ -163,190 +168,217 @@ class MapScreenState extends State<ProfilePage>
         ));
   }
 
+  Future pickImage() async {
+    final pickedFile = await picker.getImage(source: ImageSource.gallery);
+
+    setState(() {
+      _imageFile = File(pickedFile.path);
+      uploadImageToFirebase();
+    });
+  }
+
+  Future uploadImageToFirebase() async {
+    String fileName = basename(_imageFile.path);
+    String imageUrl;
+    Reference firebaseStorageRef =
+        FirebaseStorage.instance.ref().child('avatars/$fileName');
+    UploadTask uploadTask = firebaseStorageRef.putFile(_imageFile);
+    TaskSnapshot taskSnapshot = await uploadTask;
+    await taskSnapshot.ref.getDownloadURL().then((value) => {
+          imageUrl = value,
+          Auth.updateAvatarUserFirestore(currentUser.uid, imageUrl),
+        });
+    setState(() {
+      _avatarUrl = imageUrl;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context).settings.arguments as ScreenRouteArguments;
+    if (args == null) {
+      currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser.uid != null) {
+        getUser();
+        isCurrentUser = true;
+      }
+    } else {
+      isCurrentUser = false;
+    }
     return new Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Hồ sơ',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Theme.of(context).primaryColor,
-        ),
         body: new Container(
-          color: Colors.white,
-          child: new ListView(
+      color: Colors.white,
+      child: new ListView(
+        children: <Widget>[
+          Column(
             children: <Widget>[
-              Column(
-                children: <Widget>[
-                  new Container(
-                    height: 200.0,
-                    color: Colors.white,
-                    child: new Column(
-                      children: <Widget>[
+              new Container(
+                height: 250.0,
+                color: Colors.white,
+                child: new Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 20.0),
+                      child: new Stack(fit: StackFit.loose, children: <Widget>[
+                        new Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            new Container(
+                              width: 140.0,
+                              height: 140.0,
+                              decoration: new BoxDecoration(
+                                shape: BoxShape.circle,
+                                image: new DecorationImage(
+                                  image: _avatarUrl == null
+                                      ? new ExactAssetImage(
+                                          'assets/images/as.png')
+                                      : NetworkImage(_avatarUrl),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
                         Padding(
-                          padding: EdgeInsets.only(top: 20.0),
-                          child:
-                              new Stack(fit: StackFit.loose, children: <Widget>[
-                            new Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
+                            padding: EdgeInsets.only(top: 90.0, right: 100.0),
+                            child: new Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                new Container(
-                                    width: 140.0,
-                                    height: 140.0,
-                                    decoration: new BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      image: new DecorationImage(
-                                        image: new ExactAssetImage(
-                                            'assets/images/as.png'),
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )),
+                                FloatingActionButton(
+                                  onPressed: pickImage,
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    radius: 25.0,
+                                    child: new Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
                               ],
-                            ),
-                            Padding(
-                                padding:
-                                    EdgeInsets.only(top: 90.0, right: 100.0),
-                                child: new Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    new CircleAvatar(
-                                      backgroundColor: Colors.red,
-                                      radius: 25.0,
-                                      child: new Icon(
-                                        Icons.camera_alt,
-                                        color: Colors.white,
-                                      ),
-                                    )
-                                  ],
-                                )),
-                          ]),
-                        ),
-                        _buildRatingBar(),
-                      ],
+                            )),
+                      ]),
                     ),
-                  ),
-                  new Container(
-                    color: Color(0xffFFFFFF),
-                    child: Padding(
-                        padding: EdgeInsets.only(bottom: 25.0),
-                        child: new Form(
-                          key: _formKey,
-                          child: new Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: <Widget>[
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 25.0, right: 25.0, top: 25.0),
-                                  child: new Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: <Widget>[
-                                      new Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          new Text(
-                                            'Thông tin cá nhân',
-                                            style: TextStyle(
-                                                fontSize: 18.0,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                      new Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          _status
-                                              ? _getEditIcon()
-                                              : new Container(),
-                                        ],
-                                      )
-                                    ],
-                                  )),
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 25.0, right: 25.0, top: 25.0),
-                                  child: new Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: <Widget>[
-                                      new Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          new Text(
-                                            'Họ và tên',
-                                            style: TextStyle(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  )),
-                              _buildName(),
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 25.0, right: 25.0, top: 25.0),
-                                  child: new Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: <Widget>[
-                                      new Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          new Text(
-                                            'Email ID',
-                                            style: TextStyle(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  )),
-                              _buildEmail(),
-                              Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 25.0, right: 25.0, top: 25.0),
-                                  child: new Row(
-                                    mainAxisSize: MainAxisSize.max,
-                                    children: <Widget>[
-                                      new Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: <Widget>[
-                                          new Text(
-                                            'Số điện thoại',
-                                            style: TextStyle(
-                                                fontSize: 16.0,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  )),
-                              _buidTelephoneNumber(),
-                              !_status ? _getActionButtons() : new Container(),
-                            ],
-                          ),
-                        )),
-                  ),
-                  _buildButtonLogout(),
-                ],
+                    _buildRatingBar(),
+                  ],
+                ),
               ),
+              new Container(
+                color: Color(0xffFFFFFF),
+                child: Padding(
+                    padding: EdgeInsets.only(bottom: 25.0),
+                    child: new Form(
+                      key: _formKey,
+                      child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  left: 25.0, right: 25.0, top: 25.0),
+                              child: new Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                mainAxisSize: MainAxisSize.max,
+                                children: <Widget>[
+                                  new Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      new Text(
+                                        'Thông tin cá nhân',
+                                        style: TextStyle(
+                                            fontSize: 18.0,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                  new Column(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      _status
+                                          ? _getEditIcon()
+                                          : new Container(),
+                                    ],
+                                  )
+                                ],
+                              )),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  left: 25.0, right: 25.0, top: 25.0),
+                              child: new Row(
+                                children: <Widget>[
+                                  new Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      new Text(
+                                        'Họ và tên',
+                                        style: TextStyle(
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )),
+                          _buildName(),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  left: 25.0, right: 25.0, top: 25.0),
+                              child: new Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: <Widget>[
+                                  new Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      new Text(
+                                        'Email ID',
+                                        style: TextStyle(
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )),
+                          _buildEmail(),
+                          Padding(
+                              padding: EdgeInsets.only(
+                                  left: 25.0, right: 25.0, top: 25.0),
+                              child: new Row(
+                                mainAxisSize: MainAxisSize.max,
+                                children: <Widget>[
+                                  new Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: <Widget>[
+                                      new Text(
+                                        'Số điện thoại',
+                                        style: TextStyle(
+                                            fontSize: 16.0,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              )),
+                          _buidTelephoneNumber(),
+                          !_status ? _getActionButtons() : new Container(),
+                        ],
+                      ),
+                    )),
+              ),
+              _buildButtonLogout(),
             ],
           ),
-        ));
+        ],
+      ),
+    ));
   }
 
   @override
@@ -367,30 +399,29 @@ class MapScreenState extends State<ProfilePage>
             child: Padding(
               padding: EdgeInsets.only(right: 10.0),
               child: Container(
-                  child: new ElevatedButton(
-                      child: new Text(
-                        "Lưu",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.green)),
-                      onPressed: () {
-                        var data = {
-                          'fullName': _fullName.text,
-                          'email': _email.text,
-                          'telephone': _telephone.text,
-                        };
-                        Auth.updateUserFirestore(currentUser.uid, data);
-                        if (!_formKey.currentState.validate()) {
-                          return;
-                        }
-                        _formKey.currentState.save();
-                        setState(() {
-                          _status = true;
-                          FocusScope.of(context).requestFocus(new FocusNode());
-                        });
-                      })),
+                  child: new RaisedButton(
+                child: new Text("Save"),
+                textColor: Colors.white,
+                color: Colors.green,
+                onPressed: () {
+                  var data = {
+                    'fullName': _fullName.text,
+                    'email': _email.text,
+                    'telephone': _telephone.text,
+                  };
+                  Auth.updateUserFirestore(currentUser.uid, data);
+                  if (!_formKey.currentState.validate()) {
+                    return;
+                  }
+                  _formKey.currentState.save();
+                  setState(() {
+                    _status = true;
+                    FocusScope.of(context).requestFocus(new FocusNode());
+                  });
+                },
+                shape: new RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(20.0)),
+              )),
             ),
             flex: 2,
           ),
@@ -398,13 +429,10 @@ class MapScreenState extends State<ProfilePage>
             child: Padding(
               padding: EdgeInsets.only(left: 10.0),
               child: Container(
-                  child: new ElevatedButton(
-                child: new Text(
-                  "Huỷ",
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(Colors.red)),
+                  child: new RaisedButton(
+                child: new Text("Cancel"),
+                textColor: Colors.white,
+                color: Colors.red,
                 onPressed: () {
                   setState(() {
                     _status = true;
@@ -414,6 +442,8 @@ class MapScreenState extends State<ProfilePage>
                     FocusScope.of(context).requestFocus(new FocusNode());
                   });
                 },
+                shape: new RoundedRectangleBorder(
+                    borderRadius: new BorderRadius.circular(20.0)),
               )),
             ),
             flex: 2,
@@ -425,13 +455,16 @@ class MapScreenState extends State<ProfilePage>
 
   Widget _getEditIcon() {
     return new GestureDetector(
-      child: new CircleAvatar(
-        backgroundColor: Colors.red,
-        radius: 14.0,
-        child: new Icon(
-          Icons.edit,
-          color: Colors.white,
-          size: 16.0,
+      child: new Visibility(
+        visible: isCurrentUser,
+        child: new CircleAvatar(
+          backgroundColor: Colors.red,
+          radius: 14.0,
+          child: new Icon(
+            Icons.edit,
+            color: Colors.white,
+            size: 16.0,
+          ),
         ),
       ),
       onTap: () {
@@ -440,5 +473,38 @@ class MapScreenState extends State<ProfilePage>
         });
       },
     );
+  }
+
+  String basename(String path) {
+    int index = 0;
+    String result = '';
+    for (int i = path.length - 1; i >= 0; i--) {
+      if (path[i] == '/') {
+        index = i + 1;
+        break;
+      }
+    }
+    for (int i = index; i < path.length; i++) {
+      result += path[i];
+    }
+    return result;
+  }
+
+  double convertRating(double rate) {
+    double temp = rate;
+    double original = 0;
+    double result = 0;
+    while (temp > 1) {
+      original++;
+      --temp;
+    }
+    if (temp < 0.25) {
+      result = original;
+    } else if (temp >= 0.25 && temp < 0.75) {
+      result = original + 0.5;
+    } else {
+      result = original + 1;
+    }
+    return result;
   }
 }

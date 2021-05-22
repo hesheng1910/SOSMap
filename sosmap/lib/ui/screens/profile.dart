@@ -137,8 +137,9 @@ class MapScreenState extends State<ProfilePage>
       halfFilledIcon: Icons.star_half,
       filledIcon: Icons.star,
       emptyIcon: Icons.star_border,
-      filledColor: Colors.yellow,
-      emptyColor: Colors.yellow,
+      filledColor: Colors.orange,
+      emptyColor: Colors.orange,
+      size: 24,
     );
   }
 
@@ -149,6 +150,8 @@ class MapScreenState extends State<ProfilePage>
           padding: EdgeInsets.only(left: 20.0, top: 20.0),
           child: ElevatedButton(
             child: Text('Đăng xuất'),
+            style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.red)),
             onPressed: () {
               Auth.signOut();
               Navigator.push(
@@ -163,195 +166,187 @@ class MapScreenState extends State<ProfilePage>
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
+        appBar: AppBar(
+          title: Text(
+            'Hồ sơ',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Theme.of(context).primaryColor,
+        ),
         body: new Container(
-      color: Colors.white,
-      child: new ListView(
-        children: <Widget>[
-          Column(
+          color: Colors.white,
+          child: new ListView(
             children: <Widget>[
-              new Container(
-                height: 250.0,
-                color: Colors.white,
-                child: new Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.only(left: 20.0, top: 20.0),
-                      child: new Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          new Icon(
-                            Icons.arrow_back_ios,
-                            color: Colors.black,
-                            size: 22.0,
-                          ),
-                          new Padding(
-                            padding: EdgeInsets.only(left: 25.0),
-                            child: new Text('HỒ SƠ',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20.0,
-                                    fontFamily: 'sans-serif-light',
-                                    color: Colors.black)),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 20.0),
-                      child: new Stack(fit: StackFit.loose, children: <Widget>[
-                        new Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            new Container(
-                                width: 140.0,
-                                height: 140.0,
-                                decoration: new BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: new DecorationImage(
-                                    image: new ExactAssetImage(
-                                        'assets/images/as.png'),
-                                    fit: BoxFit.cover,
-                                  ),
-                                )),
-                          ],
-                        ),
+              Column(
+                children: <Widget>[
+                  new Container(
+                    height: 200.0,
+                    color: Colors.white,
+                    child: new Column(
+                      children: <Widget>[
                         Padding(
-                            padding: EdgeInsets.only(top: 90.0, right: 100.0),
-                            child: new Row(
+                          padding: EdgeInsets.only(top: 20.0),
+                          child:
+                              new Stack(fit: StackFit.loose, children: <Widget>[
+                            new Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
-                                new CircleAvatar(
-                                  backgroundColor: Colors.red,
-                                  radius: 25.0,
-                                  child: new Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.white,
-                                  ),
-                                )
+                                new Container(
+                                    width: 140.0,
+                                    height: 140.0,
+                                    decoration: new BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      image: new DecorationImage(
+                                        image: new ExactAssetImage(
+                                            'assets/images/as.png'),
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )),
                               ],
-                            )),
-                      ]),
+                            ),
+                            Padding(
+                                padding:
+                                    EdgeInsets.only(top: 90.0, right: 100.0),
+                                child: new Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    new CircleAvatar(
+                                      backgroundColor: Colors.red,
+                                      radius: 25.0,
+                                      child: new Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  ],
+                                )),
+                          ]),
+                        ),
+                        _buildRatingBar(),
+                      ],
                     ),
-                    _buildRatingBar(),
-                  ],
-                ),
+                  ),
+                  new Container(
+                    color: Color(0xffFFFFFF),
+                    child: Padding(
+                        padding: EdgeInsets.only(bottom: 25.0),
+                        child: new Form(
+                          key: _formKey,
+                          child: new Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 25.0, right: 25.0, top: 25.0),
+                                  child: new Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      new Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          new Text(
+                                            'Thông tin cá nhân',
+                                            style: TextStyle(
+                                                fontSize: 18.0,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                      new Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          _status
+                                              ? _getEditIcon()
+                                              : new Container(),
+                                        ],
+                                      )
+                                    ],
+                                  )),
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 25.0, right: 25.0, top: 25.0),
+                                  child: new Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      new Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          new Text(
+                                            'Họ và tên',
+                                            style: TextStyle(
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )),
+                              _buildName(),
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 25.0, right: 25.0, top: 25.0),
+                                  child: new Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      new Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          new Text(
+                                            'Email ID',
+                                            style: TextStyle(
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )),
+                              _buildEmail(),
+                              Padding(
+                                  padding: EdgeInsets.only(
+                                      left: 25.0, right: 25.0, top: 25.0),
+                                  child: new Row(
+                                    mainAxisSize: MainAxisSize.max,
+                                    children: <Widget>[
+                                      new Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: <Widget>[
+                                          new Text(
+                                            'Số điện thoại',
+                                            style: TextStyle(
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )),
+                              _buidTelephoneNumber(),
+                              !_status ? _getActionButtons() : new Container(),
+                            ],
+                          ),
+                        )),
+                  ),
+                  _buildButtonLogout(),
+                ],
               ),
-              new Container(
-                color: Color(0xffFFFFFF),
-                child: Padding(
-                    padding: EdgeInsets.only(bottom: 25.0),
-                    child: new Form(
-                      key: _formKey,
-                      child: new Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: <Widget>[
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 25.0),
-                              child: new Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                mainAxisSize: MainAxisSize.max,
-                                children: <Widget>[
-                                  new Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      new Text(
-                                        'Thông tin cá nhân',
-                                        style: TextStyle(
-                                            fontSize: 18.0,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                  new Column(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      _status
-                                          ? _getEditIcon()
-                                          : new Container(),
-                                    ],
-                                  )
-                                ],
-                              )),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 25.0),
-                              child: new Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: <Widget>[
-                                  new Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      new Text(
-                                        'Họ và tên',
-                                        style: TextStyle(
-                                            fontSize: 16.0,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              )),
-                          _buildName(),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 25.0),
-                              child: new Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: <Widget>[
-                                  new Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      new Text(
-                                        'Email ID',
-                                        style: TextStyle(
-                                            fontSize: 16.0,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              )),
-                          _buildEmail(),
-                          Padding(
-                              padding: EdgeInsets.only(
-                                  left: 25.0, right: 25.0, top: 25.0),
-                              child: new Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: <Widget>[
-                                  new Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: <Widget>[
-                                      new Text(
-                                        'Số điện thoại',
-                                        style: TextStyle(
-                                            fontSize: 16.0,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              )),
-                          _buidTelephoneNumber(),
-                          !_status ? _getActionButtons() : new Container(),
-                        ],
-                      ),
-                    )),
-              ),
-              _buildButtonLogout(),
             ],
           ),
-        ],
-      ),
-    ));
+        ));
   }
 
   @override
@@ -372,29 +367,30 @@ class MapScreenState extends State<ProfilePage>
             child: Padding(
               padding: EdgeInsets.only(right: 10.0),
               child: Container(
-                  child: new RaisedButton(
-                child: new Text("Save"),
-                textColor: Colors.white,
-                color: Colors.green,
-                onPressed: () {
-                  var data = {
-                    'fullName': _fullName.text,
-                    'email': _email.text,
-                    'telephone': _telephone.text,
-                  };
-                  Auth.updateUserFirestore(currentUser.uid, data);
-                  if (!_formKey.currentState.validate()) {
-                    return;
-                  }
-                  _formKey.currentState.save();
-                  setState(() {
-                    _status = true;
-                    FocusScope.of(context).requestFocus(new FocusNode());
-                  });
-                },
-                shape: new RoundedRectangleBorder(
-                    borderRadius: new BorderRadius.circular(20.0)),
-              )),
+                  child: new ElevatedButton(
+                      child: new Text(
+                        "Lưu",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.all(Colors.green)),
+                      onPressed: () {
+                        var data = {
+                          'fullName': _fullName.text,
+                          'email': _email.text,
+                          'telephone': _telephone.text,
+                        };
+                        Auth.updateUserFirestore(currentUser.uid, data);
+                        if (!_formKey.currentState.validate()) {
+                          return;
+                        }
+                        _formKey.currentState.save();
+                        setState(() {
+                          _status = true;
+                          FocusScope.of(context).requestFocus(new FocusNode());
+                        });
+                      })),
             ),
             flex: 2,
           ),
@@ -402,10 +398,13 @@ class MapScreenState extends State<ProfilePage>
             child: Padding(
               padding: EdgeInsets.only(left: 10.0),
               child: Container(
-                  child: new RaisedButton(
-                child: new Text("Cancel"),
-                textColor: Colors.white,
-                color: Colors.red,
+                  child: new ElevatedButton(
+                child: new Text(
+                  "Huỷ",
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.red)),
                 onPressed: () {
                   setState(() {
                     _status = true;
@@ -415,8 +414,6 @@ class MapScreenState extends State<ProfilePage>
                     FocusScope.of(context).requestFocus(new FocusNode());
                   });
                 },
-                shape: new RoundedRectangleBorder(
-                    borderRadius: new BorderRadius.circular(20.0)),
               )),
             ),
             flex: 2,

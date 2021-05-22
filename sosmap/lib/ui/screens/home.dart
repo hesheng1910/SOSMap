@@ -6,19 +6,36 @@ import 'package:sosmap/ui/screens/profile.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
-import 'package:sosmap/wemap/main.dart';
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import 'history.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   StateModel appState;
   bool _loadingVisible = false;
-
+  TabController _tabController;
+  var _tabItems = <TabItem>[
+    TabItem(
+      icon: Icon(Icons.map),
+      title: 'Bản đồ',
+    ),
+    TabItem(
+      icon: Icon(Icons.history),
+      title: 'Lịch sử',
+    ),
+    TabItem(
+      icon: Icon(Icons.person),
+      title: 'Hồ sơ',
+    ),
+  ];
   @override
   void initState() {
     getPermissions();
+    _tabController = TabController(length: 3, vsync: this);
     super.initState();
   }
 
@@ -54,39 +71,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final List<Widget> _widgetOptions = <Widget>[
         FullMap(),
-        MapsDemo(),
+        HistoryScreen(),
         ProfilePage(),
       ];
       return Scaffold(
         backgroundColor: Colors.white,
         body: LoadingScreen(
           child: IndexedStack(
-            index: _selectedIndex,
             children: _widgetOptions,
+            index: _selectedIndex,
           ),
           inAsyncCall: _loadingVisible,
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.map),
-              label: 'Bản đồ',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.history),
-              label: 'Lịch sử',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Hồ sơ',
-            ),
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.white,
-          unselectedItemColor: Colors.black,
-          selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+        bottomNavigationBar: ConvexAppBar(
+          items: _tabItems,
+          initialActiveIndex: _selectedIndex,
+          style: TabStyle.textIn,
+          curve: Curves.bounceInOut,
+          controller: _tabController,
+          backgroundColor: Theme.of(context).primaryColor,
+          gradient: RadialGradient(
+            center: const Alignment(0, 0), // near the top right
+            radius: 5,
+            colors: [Colors.green, Colors.blue, Colors.redAccent],
+          ),
           onTap: _onItemTapped,
-          backgroundColor: Colors.green,
         ),
       );
     }

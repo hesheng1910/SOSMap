@@ -9,6 +9,7 @@ import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/rating_card.dart';
 import 'package:sosmap/util/auth.dart';
 import 'package:sosmap/util/list_report.dart';
+import 'package:sosmap/util/notiFCM.dart';
 import 'package:sosmap/util/request.dart';
 import 'package:sosmap/wemap/route.dart';
 import 'package:intl/intl.dart';
@@ -46,6 +47,21 @@ class _HelpInfoState extends State<HelpInfo> {
   Future<void> _getUserNeedHelp() async {
     if (widget.helpRequest.userId != null)
       _userNeedHelp = await Auth.getUserFirestore(widget.helpRequest.userId);
+  }
+
+  Future<void> _cancelHelp() async {
+    widget.helpRequest.status = null;
+    widget.helpRequest.helperId = null;
+    RequestAPI.editRequestDB(widget.helpRequest);
+
+    //gửi notification
+    String token = _userNeedHelp.tokens;
+    if (token != null) {
+      String title =
+          _userHelp.fullName ?? "Người dùng chưa đặt tên" + " đã huỷ giúp đỡ";
+      String message = "Xin lỗi! Mình không thể đến giúp bạn được";
+      NotiFCM.sendPushMessage(token, title, message);
+    }
   }
 
   @override
@@ -487,9 +503,7 @@ class _HelpInfoState extends State<HelpInfo> {
                   children: [
                     TextButton(
                       onPressed: () {
-                        widget.helpRequest.status = null;
-                        widget.helpRequest.helperId = null;
-                        RequestAPI.editRequestDB(widget.helpRequest);
+                        _cancelHelp();
                       },
                       style: TextButton.styleFrom(
                           primary: Colors.white, backgroundColor: Colors.red),

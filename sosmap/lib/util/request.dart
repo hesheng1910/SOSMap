@@ -12,7 +12,7 @@ class RequestAPI {
         .set(requestModel.toJson());
   }
 
-  static void editRequestDB(RequestModel requestModel) async {
+  static Future<void> editRequestDB(RequestModel requestModel) async {
     FirebaseFirestore.instance
         .collection('requests')
         .doc(requestModel.userId)

@@ -1,6 +1,7 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:sosmap/ui/screens/history.dart';
 import 'package:sosmap/ui/screens/login_page.dart';
 import 'package:sosmap/ui/screens/signup_page.dart';
 
@@ -57,15 +58,16 @@ class Home extends StatelessWidget {
       //onGenerateRoute: Navigation.router.generator,
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (context) => SignInScreen(),
+        '/': (context) => HomeScreen(),
         '/signin': (context) => SignInScreen(),
         '/signup': (context) => SignUpScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
         '/route-page': (context) => Routing(),
         '/login-page': (context) => LoginPageFourteen(),
         '/signup-page': (context) => SignupThreePage(),
+        '/history': (context) => HistoryScreen(),
         '/home': (context) => HomeScreen()
-       },
+      },
     );
   }
 }

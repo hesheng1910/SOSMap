@@ -192,7 +192,7 @@ class _SignInScreenState extends State<SignInScreen> {
         await _changeLoadingVisible();
         //need await so it has chance to go through error if found.
         await StateWidget.of(context).logInUser(email, password);
-        await Navigator.pushNamed(context, '/home');
+        await Navigator.pushNamed(context, '/');
       } catch (e) {
         _changeLoadingVisible();
         print("Đăng nhập không thành công: $e");

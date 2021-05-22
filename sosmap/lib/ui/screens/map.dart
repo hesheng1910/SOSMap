@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,7 +6,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:sosmap/main.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/models/user.dart';
@@ -15,11 +13,11 @@ import 'package:sosmap/ui/widgets/card_infomation.dart';
 import 'package:sosmap/ui/widgets/create_help.dart';
 import 'package:sosmap/ui/widgets/help_info.dart';
 import 'package:sosmap/util/auth.dart';
+import 'package:sosmap/util/notiFCM.dart';
 import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/wemap/route.dart';
 import 'package:wemapgl/wemapgl.dart';
-import 'package:http/http.dart' as http;
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -67,6 +65,13 @@ class FullMapState extends State<FullMap> {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
   @override
   void initState() {
     initTokenFCM();
@@ -184,9 +189,8 @@ class FullMapState extends State<FullMap> {
     mapController.updateSymbol(_selectedSymbol, changes);
   }
 
-  Future<void> _add(LatLng latlng, Map<String, dynamic> requestData) async {
-    if (mapController == null) return;
-    await mapController.addSymbol(
+  void _add(LatLng latlng, Map<String, dynamic> requestData) {
+    mapController?.addSymbol(
         SymbolOptions(
           geometry: latlng,
           iconImage: "assets/symbols/help.png",
@@ -243,11 +247,21 @@ class FullMapState extends State<FullMap> {
     StateWidget.of(context).initUser();
   }
 
-  Future<void> _confirmHelp(RequestModel requestModel) {
+  Future<void> _confirmHelp(RequestModel requestModel) async {
     RequestModel newRequest = requestModel;
     newRequest.helperId = appState.user.userId;
     newRequest.status = "waiting";
-    RequestAPI.editRequestDB(newRequest);
+    await RequestAPI.editRequestDB(newRequest);
+
+    // gửi notification
+    UserModel userModel = await Auth.getUserFirestore(newRequest.userId);
+    String token = userModel?.tokens;
+    if (token != null) {
+      String title = "Đã nhận được sự trợ giúp!";
+      String message = appState.user.fullName ??
+          "Người dùng chưa đặt tên" + " đang đến giúp bạn";
+      NotiFCM.sendPushMessage(token, title, message);
+    }
   }
 
   void _updateHelper(RequestModel requestModel) {
@@ -340,33 +354,7 @@ class FullMapState extends State<FullMap> {
     return 12742 * asin(sqrt(a));
   }
 
-  String constructFCMPayload(String token, String fullname, String message) {
-    return jsonEncode({
-      'token': token,
-      'notification': {
-        'title': '$fullname đang cần trợ giúp!',
-        'body': message,
-      },
-    });
-  }
-
-  Future<void> sendPushMessage(
-      String token, String fullname, String message) async {
-    try {
-      await http.post(
-        Uri.parse('https://sosmap.herokuapp.com/api/fcm/sosmap'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: constructFCMPayload(token, fullname, message),
-      );
-      print('FCM request for device sent!');
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future<void> sendNotification(RequestModel requestModel) async {
+  Future<void> sendNotificationCreateHelp(RequestModel requestModel) async {
     QuerySnapshot snapshot =
         await FirebaseFirestore.instance.collection('users').get();
     snapshot.docs.forEach((element) {
@@ -381,7 +369,8 @@ class FullMapState extends State<FullMap> {
             userModel.lng);
         if (distance < 5.0) {
           String token = userModel.tokens;
-          sendPushMessage(token, requestModel.name ?? "Tôi",
+          String title = '${requestModel.name ?? "Tôi"} đang cần trợ giúp!';
+          NotiFCM.sendPushMessage(token, title,
               requestModel.message ?? "Hãy đến trợ giúp tôi nhé!");
         }
       }
@@ -404,7 +393,7 @@ class FullMapState extends State<FullMap> {
                   if (snapshot.hasData) {
                     RequestModel userNeedHelp;
                     RequestModel myHelp;
-                    mapController.clearSymbols();
+                    mapController?.clearSymbols();
                     snapshot.data.docs.forEach((data) {
                       RequestModel newRequest = RequestModel.fromDocument(data);
                       if (newRequest.place != null) {
@@ -591,7 +580,8 @@ class FullMapState extends State<FullMap> {
                               .set(_createHelpPopup.requestModel.toJson())
                               .then((value) {
                             //Send notification
-                            sendNotification(_createHelpPopup.requestModel);
+                            sendNotificationCreateHelp(
+                                _createHelpPopup.requestModel);
                             Navigator.of(context).pop();
                             Alert(
                               context: context,

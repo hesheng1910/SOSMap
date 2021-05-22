@@ -24,19 +24,23 @@ class UserModel {
   double lat;
   double lng;
   String tokens;
+  String avatarUrl;
 
-  UserModel(
-      {this.userId,
-      this.fullName,
-      this.email,
-      this.tel,
-      this.rate,
-      this.lat,
-      this.lng,
-      this.tokens});
+  UserModel({
+    this.userId,
+    this.avatarUrl,
+    this.fullName,
+    this.email,
+    this.tel,
+    this.rate,
+    this.lat,
+    this.lng,
+    this.tokens,
+  });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => new UserModel(
       userId: json["userId"],
+      avatarUrl: json['avatarUrl'],
       fullName: json["fullName"],
       email: json["email"],
       tel: json["tel"],
@@ -47,6 +51,7 @@ class UserModel {
 
   Map<String, dynamic> toJson() => {
         "userId": userId,
+        "avatarUrl": avatarUrl,
         "fullName": fullName,
         "email": email,
         "tel": tel,

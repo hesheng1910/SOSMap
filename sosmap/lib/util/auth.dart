@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 //import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:sosmap/models/settings.dart';
 import 'package:flutter/services.dart';
@@ -105,6 +108,19 @@ class Auth {
     }
   }
 
+  static Future<void> updateAvatarUserFirestore(
+      String userId, String fileName) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({'avatarUrl': fileName});
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
+  }
+
   static Future<SettingModels> getSettingsFirestore(String settingsId) async {
     if (settingsId != null) {
       return FirebaseFirestore.instance
@@ -190,6 +206,16 @@ class Auth {
       }
     } else {
       return 'Xảy ra lỗi không xác định.';
+    }
+  }
+
+  static UploadTask uploadFile(String destination, File file) {
+    try {
+      final ref = FirebaseStorage.instance.ref(destination);
+
+      return ref.putFile(file);
+    } on FirebaseException catch (e) {
+      return null;
     }
   }
 

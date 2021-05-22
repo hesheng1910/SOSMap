@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: any
   firebase_core: ^0.7.0
   firebase_auth: ^0.20.1
+  firebase_storage: ^7.0.0
   cloud_firestore: ^0.16.0+1
   another_flushbar: ^1.10.20
 
@@ -41,6 +42,7 @@ dependencies:
   rating_bar: ^0.2.0
   pull_to_refresh: ^2.0.0
   convex_bottom_bar: ^3.0.0
+  image_picker: ^0.6.7
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -7,11 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:rating_bar/rating_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sosmap/wemap/route.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
   MapScreenState createState() => MapScreenState();
+}
+
+class ScreenProfileArguments {
+  String userId;
+  ScreenProfileArguments(this.userId);
 }
 
 class MapScreenState extends State<ProfilePage>
@@ -36,9 +40,9 @@ class MapScreenState extends State<ProfilePage>
     super.initState();
   }
 
-  void getUser() async {
+  void getUser(String userId) async {
     try {
-      user = await Auth.getUserFirestore(currentUser.uid);
+      user = await Auth.getUserFirestore(userId);
       _rate = convertRating(user.rate);
       _avatarUrl = user.avatarUrl != null ? user.avatarUrl : null;
       _email = TextEditingController(text: user.email);
@@ -196,14 +200,15 @@ class MapScreenState extends State<ProfilePage>
   @override
   Widget build(BuildContext context) {
     final args =
-        ModalRoute.of(context).settings.arguments as ScreenRouteArguments;
+        ModalRoute.of(context).settings.arguments as ScreenProfileArguments;
     if (args == null) {
       currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser.uid != null) {
-        getUser();
+        getUser(currentUser.uid);
         isCurrentUser = true;
       }
     } else {
+      getUser(args.userId);
       isCurrentUser = false;
     }
     return new Scaffold(
@@ -241,24 +246,27 @@ class MapScreenState extends State<ProfilePage>
                             )
                           ],
                         ),
-                        Padding(
-                            padding: EdgeInsets.only(top: 90.0, right: 100.0),
-                            child: new Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                FloatingActionButton(
-                                  onPressed: pickImage,
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.red,
-                                    radius: 25.0,
-                                    child: new Icon(
-                                      Icons.camera_alt,
-                                      color: Colors.white,
+                        Visibility(
+                          visible: isCurrentUser,
+                          child: Padding(
+                              padding: EdgeInsets.only(top: 90.0, right: 100.0),
+                              child: new Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  FloatingActionButton(
+                                    onPressed: pickImage,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.red,
+                                      radius: 25.0,
+                                      child: new Icon(
+                                        Icons.camera_alt,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            )),
+                                ],
+                              )),
+                        )
                       ]),
                     ),
                     _buildRatingBar(),

@@ -60,7 +60,7 @@ class _HelpInfoState extends State<HelpInfo> {
       String title =
           _userHelp.fullName ?? "Người dùng chưa đặt tên" + " đã huỷ giúp đỡ";
       String message = "Xin lỗi! Mình không thể đến giúp bạn được";
-      NotiFCM.sendPushMessage(token, title, message);
+      NotiFCM.sendPushMessage(token, title, message, 'cancel');
     }
   }
 

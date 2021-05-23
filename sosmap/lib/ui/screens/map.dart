@@ -3,9 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
@@ -55,18 +53,9 @@ class FullMapState extends State<FullMap> {
   bool _isDrawRouter = false;
   RequestModel _userNeedHelp;
   RequestModel _myHelpRequest;
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
   Map<String, Symbol> userSymbol = new Map();
   Map<String, Map<String, dynamic>> userSymbolData = new Map();
-  final AndroidNotificationChannel channel = AndroidNotificationChannel(
-    'high_importance_channel', // id
-    'High Importance Notifications', // title
-    'This channel is used for important notifications.', // description
-    importance: Importance.high,
-  );
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
   @override
   void setState(fn) {
     if (mounted) {
@@ -77,40 +66,6 @@ class FullMapState extends State<FullMap> {
   @override
   void initState() {
     initTokenFCM();
-    FirebaseMessaging.instance
-        .getInitialMessage()
-        .then((RemoteMessage message) {
-      if (message != null) {
-        print('Có notification');
-      }
-    });
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      RemoteNotification notification = message.notification;
-      AndroidNotification android = message.notification?.android;
-      if (notification != null && android != null) {
-        FlutterAppBadger.updateBadgeCount(1);
-        flutterLocalNotificationsPlugin.show(
-            notification.hashCode,
-            notification.title,
-            notification.body,
-            NotificationDetails(
-              android: AndroidNotificationDetails(
-                channel.id,
-                channel.name,
-                channel.description,
-                // TODO add a proper drawable resource to android, for now using
-                //      one that already exists in example app.
-                //icon: 'launch_background',
-                color: Color.fromRGBO(0, 144, 74, 1),
-              ),
-            ));
-      }
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      FlutterAppBadger.removeBadge();
-      print('A new onMessageOpenedApp event was published!');
-    });
 
     _position = _kInitialPosition;
     _isMoving = true;
@@ -270,7 +225,7 @@ class FullMapState extends State<FullMap> {
       String title = "Đã nhận được sự trợ giúp!";
       String message = (appState.user.fullName ?? "Người dùng chưa đặt tên") +
           " đang đến giúp bạn";
-      NotiFCM.sendPushMessage(token, title, message);
+      NotiFCM.sendPushMessage(token, title, message, 'waiting');
     }
   }
 
@@ -381,7 +336,7 @@ class FullMapState extends State<FullMap> {
           String token = userModel.tokens;
           String title = '${requestModel.name ?? "Tôi"} đang cần trợ giúp!';
           NotiFCM.sendPushMessage(token, title,
-              requestModel.message ?? "Hãy đến trợ giúp tôi nhé!");
+              requestModel.message ?? "Hãy đến trợ giúp tôi nhé!", 'new');
         }
       }
     });

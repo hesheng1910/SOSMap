@@ -1,6 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:location/location.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/ui/screens/map.dart';
 import 'package:sosmap/ui/screens/profile.dart';
@@ -8,6 +12,7 @@ import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
+import '../../main.dart';
 import 'history.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -74,6 +79,77 @@ class _HomeScreenState extends State<HomeScreen>
       } else {
         _loadingVisible = false;
       }
+
+      FirebaseMessaging.instance
+          .getInitialMessage()
+          .then((RemoteMessage message) {
+        if (message != null) {
+          print('Có notification');
+          print(message.data);
+        }
+      });
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        RemoteNotification notification = message.notification;
+        AndroidNotification android = message.notification?.android;
+        if (notification != null && android != null) {
+          FlutterAppBadger.updateBadgeCount(1);
+          flutterLocalNotificationsPlugin.show(
+              notification.hashCode,
+              notification.title,
+              notification.body,
+              NotificationDetails(
+                android: AndroidNotificationDetails(
+                  channel.id,
+                  channel.name,
+                  channel.description,
+                  // TODO add a proper drawable resource to android, for now using
+                  //      one that already exists in example app.
+                  //icon: 'launch_background',
+                  color: Color.fromRGBO(0, 144, 74, 1),
+                ),
+              ));
+          if (message.data.containsKey('type') &&
+              message.data['type'] == 'waiting') {
+            Alert(
+                    context: context,
+                    type: AlertType.success,
+                    title: 'NHẬN ĐƯỢC TRỢ GIÚP',
+                    closeIcon: Icon(
+                      Icons.close,
+                      color: Colors.red,
+                    ),
+                    content: Text(message.notification.body),
+                    style: AlertStyle(
+                        isButtonVisible: true,
+                        titleStyle:
+                            TextStyle(color: Theme.of(context).primaryColor)))
+                .show();
+          }
+        }
+      });
+
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        FlutterAppBadger.removeBadge();
+        print('A new onMessageOpenedApp event was published!');
+        if (message.data.containsKey('type') &&
+            message.data['type'] == 'waiting') {
+          Alert(
+                  context: context,
+                  type: AlertType.success,
+                  title: 'NHẬN ĐƯỢC TRỢ GIÚP',
+                  closeIcon: Icon(
+                    Icons.close,
+                    color: Colors.red,
+                  ),
+                  content: Text(message.notification.body),
+                  style: AlertStyle(
+                      isButtonVisible: true,
+                      titleStyle:
+                          TextStyle(color: Theme.of(context).primaryColor)))
+              .show();
+        }
+      });
+
       return Scaffold(
         backgroundColor: Colors.white,
         body: LoadingScreen(

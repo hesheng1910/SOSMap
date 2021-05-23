@@ -17,12 +17,8 @@ async function onSendNotification(body) {
         await admin.messaging().sendToDevice(
             token, // ['token_1', 'token_2', ...]
             {
-            //   data: {
-            //     owner: JSON.stringify(owner),
-            //     user: JSON.stringify(user),
-            //     picture: JSON.stringify(picture),
-            //   },
-              notification: body.notification
+              notification: body.notification,
+              data: body.data,
             },
             {
               // Required for background/quit data-only messages on iOS

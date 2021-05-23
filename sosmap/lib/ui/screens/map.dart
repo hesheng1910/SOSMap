@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/models/user.dart';
@@ -69,7 +68,6 @@ class FullMapState extends State<FullMap> {
 
     _position = _kInitialPosition;
     _isMoving = true;
-    listRequest = FirebaseFirestore.instance.collection('requests').snapshots();
     weMap = WeMap(
       initialCameraPosition: _kInitialPosition,
       onMapCreated: onMapCreated,
@@ -205,11 +203,8 @@ class FullMapState extends State<FullMap> {
     setState(() {
       myLatLng = myLocation;
     });
-    UserModel newUser = appState.user;
-    newUser.lat = myLocation.latitude;
-    newUser.lng = myLocation.longitude;
-    Auth.updateUser(newUser);
-    StateWidget.of(context).initUser();
+    Auth.updateLocationUserFirestore(
+        appState.user.userId, myLocation.latitude, myLocation.longitude);
   }
 
   Future<void> _confirmHelp(RequestModel requestModel) async {
@@ -346,7 +341,6 @@ class FullMapState extends State<FullMap> {
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
-    print(userSymbol);
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(

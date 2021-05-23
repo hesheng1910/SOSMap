@@ -80,8 +80,10 @@ class _CardInfomationState extends State<CardInfomation> {
                     ),
                     leading: CircleAvatar(
                       radius: 25.0,
-                      child: Text(
-                          "${_userModel?.fullName != null ? _userModel.fullName.substring(0, 2) : ""}"),
+                      backgroundColor: Colors.transparent,
+                      backgroundImage: _userModel.avatarUrl == null
+                          ? AssetImage('assets/images/as.png')
+                          : NetworkImage(_userModel.avatarUrl),
                     ),
                     title: InkWell(
                         child: Text(

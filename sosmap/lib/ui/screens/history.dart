@@ -4,7 +4,9 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sosmap/models/list_report.dart';
 import 'package:sosmap/models/report.dart';
 import 'package:sosmap/models/state.dart';
+import 'package:sosmap/models/user.dart';
 import 'package:sosmap/ui/widgets/rate_star.dart';
+import 'package:sosmap/util/auth.dart';
 import 'package:sosmap/util/list_report.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:intl/intl.dart';
@@ -20,7 +22,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   StateModel appState;
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-
+  bool isLoadAvt = false;
   @override
   void initState() {
     super.initState();
@@ -41,13 +43,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _refreshController.loadComplete();
   }
 
-  Future getListReport() async {
+  getListReport() async {
     if (appState.user.userId != null) {
       ListReportModel result =
           await ReportAPI.getListReportFirestore(appState.user.userId);
       return result.listReport;
     }
-    return [];
+    return null;
+  }
+
+  getAvatarUrl(String uid) async {
+    UserModel userModel = await Auth.getUserFirestore(uid);
+    return userModel.avatarUrl;
   }
 
   String readTimestamp(int timestamp) {
@@ -78,7 +85,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Lịch sử giúp đỡ',
+            'Những người đã giúp bạn',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Theme.of(context).primaryColor,
@@ -126,9 +133,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       title: Text(report.request.name),
                       subtitle: Text(readTimestamp(
                           report.createAt.millisecondsSinceEpoch)),
-                      leading: CircleAvatar(
-                        child: Text('CH'),
-                        backgroundColor: Theme.of(context).primaryColor,
+                      leading: FutureBuilder(
+                        future: getAvatarUrl(report.request.userId),
+                        builder: (context, snap) {
+                          if (snap.hasData) {
+                            return CircleAvatar(
+                              backgroundImage: NetworkImage(snap.data),
+                              backgroundColor: Colors.transparent,
+                            );
+                          } else
+                            return CircleAvatar(
+                              backgroundImage:
+                                  AssetImage('assets/images/as.png'),
+                              backgroundColor: Colors.transparent,
+                            );
+                        },
                       ),
                       trailing: RateStar(
                         rateScore: report.rate.toDouble(),
@@ -152,10 +171,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               ListTile(
-                                  leading: CircleAvatar(
-                                    radius: 25.0,
-                                    child: Text(
-                                        "${report?.request?.name != null ? report?.request?.name?.substring(0, 2) : ""}"),
+                                  leading: FutureBuilder(
+                                    future: getAvatarUrl(report.request.userId),
+                                    builder: (context, snap) {
+                                      if (snap.hasData)
+                                        return CircleAvatar(
+                                          backgroundImage:
+                                              NetworkImage(snap.data),
+                                          backgroundColor: Colors.transparent,
+                                        );
+                                      else
+                                        return CircleAvatar(
+                                          backgroundImage: AssetImage(
+                                              'assets/images/as.png'),
+                                          backgroundColor: Colors.transparent,
+                                        );
+                                    },
                                   ),
                                   title: InkWell(
                                       child: Text(

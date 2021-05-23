@@ -50,6 +50,19 @@ class Auth {
     });
   }
 
+  static Future<void> updateLocationUserFirestore(
+      String userId, double lat, double lng) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({'lat': lat, 'lng': lng});
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
+  }
+
   static Future<bool> checkUserExist(String userId) async {
     bool exists = false;
     try {

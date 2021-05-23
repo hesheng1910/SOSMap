@@ -10,6 +10,8 @@ import 'package:sosmap/util/state_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
+import 'profile.dart';
+
 class HistoryScreen extends StatefulWidget {
   _HistoryScreenState createState() => _HistoryScreenState();
 }
@@ -126,7 +128,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           report.createAt.millisecondsSinceEpoch)),
                       leading: CircleAvatar(
                         child: Text('CH'),
-                        backgroundColor: Colors.green,
+                        backgroundColor: Theme.of(context).primaryColor,
                       ),
                       trailing: RateStar(
                         rateScore: report.rate.toDouble(),
@@ -139,6 +141,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             isCloseButton: true,
                             isButtonVisible: false,
                             animationType: AnimationType.grow,
+                            titleStyle: TextStyle(
+                                color: Theme.of(context).primaryColor),
+                          ),
+                          closeIcon: Icon(
+                            Icons.close,
+                            color: Colors.red,
                           ),
                           content: Column(
                             mainAxisSize: MainAxisSize.min,
@@ -149,12 +157,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     child: Text(
                                         "${report?.request?.name != null ? report?.request?.name?.substring(0, 2) : ""}"),
                                   ),
-                                  title: Text(
-                                    "${report?.request?.name ?? ""}",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 16),
-                                  ),
+                                  title: InkWell(
+                                      child: Text(
+                                        "${report?.request?.name ?? ""}",
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16),
+                                      ),
+                                      onTap: () {
+                                        Navigator.pushNamed(context, '/profile',
+                                            arguments: ScreenProfileArguments(
+                                                report.request.userId));
+                                      }),
                                   subtitle: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.start,
@@ -168,7 +182,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         style: TextStyle(
                                             color: report.request.status == null
                                                 ? Colors.red
-                                                : Colors.green,
+                                                : Theme.of(context)
+                                                    .primaryColor,
                                             fontSize: 15),
                                       ),
                                     ],

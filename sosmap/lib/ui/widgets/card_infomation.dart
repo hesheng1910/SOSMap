@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/request.dart';
 import 'package:sosmap/models/user.dart';
+import 'package:sosmap/ui/screens/profile.dart';
 import 'package:sosmap/ui/widgets/rate_star.dart';
 import 'package:sosmap/util/auth.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,7 +45,7 @@ class _CardInfomationState extends State<CardInfomation> {
           // while data is loading:
           return Center(
             child: CircularProgressIndicator(
-              backgroundColor: Colors.green,
+              backgroundColor: Theme.of(context).primaryColor,
             ),
           );
         } else {
@@ -53,7 +54,7 @@ class _CardInfomationState extends State<CardInfomation> {
           return Card(
             clipBehavior: Clip.antiAlias,
             margin: EdgeInsets.all(20),
-            color: Colors.green[50],
+            color: Colors.green.shade50,
             shadowColor: Colors.blueGrey,
             elevation: 10,
             child: Column(
@@ -68,12 +69,12 @@ class _CardInfomationState extends State<CardInfomation> {
                       children: [
                         IconButton(
                             icon: Icon(Icons.call),
-                            color: Colors.green,
+                            color: Theme.of(context).primaryColor,
                             onPressed: () => launch(
                                 "tel://${widget.requestModel.tel ?? ""}")),
                         IconButton(
                             icon: Icon(Icons.directions),
-                            color: Colors.green,
+                            color: Theme.of(context).primaryColor,
                             onPressed: widget.onOpenMapBtn),
                       ],
                     ),
@@ -82,11 +83,17 @@ class _CardInfomationState extends State<CardInfomation> {
                       child: Text(
                           "${_userModel?.fullName != null ? _userModel.fullName.substring(0, 2) : ""}"),
                     ),
-                    title: Text(
-                      "${_userModel?.fullName ?? ""}",
-                      style:
-                          TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-                    ),
+                    title: InkWell(
+                        child: Text(
+                          "${_userModel?.fullName ?? ""}",
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500, fontSize: 16),
+                        ),
+                        onTap: () {
+                          Navigator.pushNamed(context, '/profile',
+                              arguments:
+                                  ScreenProfileArguments(_userModel.userId));
+                        }),
                     subtitle: Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -104,7 +111,7 @@ class _CardInfomationState extends State<CardInfomation> {
                           style: TextStyle(
                               color: widget.requestModel.status == null
                                   ? Colors.red
-                                  : Colors.green,
+                                  : Theme.of(context).primaryColor,
                               fontSize: 15),
                         ),
                       ],
@@ -198,7 +205,7 @@ class _CardInfomationState extends State<CardInfomation> {
                         onPressed: widget.onConfirmBtn,
                         style: TextButton.styleFrom(
                             primary: Colors.white,
-                            backgroundColor: Colors.green),
+                            backgroundColor: Theme.of(context).primaryColor),
                         child: const Text('TÔI ĐANG ĐẾN'),
                       ),
                   ],

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -55,7 +56,8 @@ class FullMapState extends State<FullMap> {
   RequestModel _userNeedHelp;
   RequestModel _myHelpRequest;
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-
+  Map<String, Symbol> userSymbol = new Map();
+  Map<String, Map<String, dynamic>> userSymbolData = new Map();
   final AndroidNotificationChannel channel = AndroidNotificationChannel(
     'high_importance_channel', // id
     'High Importance Notifications', // title
@@ -133,7 +135,7 @@ class FullMapState extends State<FullMap> {
     super.initState();
   }
 
-  void onMapCreated(WeMapController controller) {
+  onMapCreated(WeMapController controller) {
     mapController = controller;
 
     mapController.addListener(_onMapChanged);
@@ -148,7 +150,7 @@ class FullMapState extends State<FullMap> {
     super.dispose();
   }
 
-  void _onMapChanged() {
+  _onMapChanged() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
         _extractMapInfo();
@@ -161,7 +163,7 @@ class FullMapState extends State<FullMap> {
     _isMoving = mapController.isCameraMoving;
   }
 
-  void _onSymbolTapped(Symbol symbol) {
+  _onSymbolTapped(Symbol symbol) {
     if (_selectedSymbol != null) {
       _updateSelectedSymbol(
         const SymbolOptions(iconSize: 1.0),
@@ -175,7 +177,7 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  void _onUnSelectedSymbol() {
+  _onUnSelectedSymbol() {
     if (_selectedSymbol != null)
       _updateSelectedSymbol(
         const SymbolOptions(iconSize: 1.0),
@@ -185,24 +187,32 @@ class FullMapState extends State<FullMap> {
     });
   }
 
-  void _updateSelectedSymbol(SymbolOptions changes) {
+  _updateSelectedSymbol(SymbolOptions changes) {
     mapController.updateSymbol(_selectedSymbol, changes);
   }
 
-  void _add(LatLng latlng, Map<String, dynamic> requestData) {
-    mapController?.addSymbol(
+  _add(LatLng latlng, Map<String, dynamic> requestData, String uid) async {
+    Symbol symbol = await mapController?.addSymbol(
         SymbolOptions(
           geometry: latlng,
           iconImage: "assets/symbols/help.png",
         ),
         requestData);
+    userSymbol.update(uid, (value) => symbol, ifAbsent: () => symbol);
+    userSymbolData.update(uid, (value) => requestData,
+        ifAbsent: () => requestData);
+
     // setState(() {
     //   _symbolCount += 1;
     // });
   }
 
-  void _remove(Symbol symbol) {
-    mapController.removeSymbol(symbol);
+  _remove(String uid) {
+    var symbol = userSymbol[uid];
+    if (symbol != null) {
+      mapController.removeSymbol(symbol);
+    }
+
     // setState(() {
     //   _symbolCount -= 1;
     // });
@@ -224,7 +234,7 @@ class FullMapState extends State<FullMap> {
     );
   }
 
-  void _getCurrentLocation() async {
+  _getCurrentLocation() async {
     LatLng myLocation = await mapController.requestMyLocationLatLng();
     mapController.moveCamera(CameraUpdate.newCameraPosition(
       CameraPosition(
@@ -258,25 +268,25 @@ class FullMapState extends State<FullMap> {
     String token = userModel?.tokens;
     if (token != null) {
       String title = "Đã nhận được sự trợ giúp!";
-      String message = appState.user.fullName ??
-          "Người dùng chưa đặt tên" + " đang đến giúp bạn";
+      String message = (appState.user.fullName ?? "Người dùng chưa đặt tên") +
+          " đang đến giúp bạn";
       NotiFCM.sendPushMessage(token, title, message);
     }
   }
 
-  void _updateHelper(RequestModel requestModel) {
+  _updateHelper(RequestModel requestModel) {
     setState(() {
       _userNeedHelp = requestModel;
     });
   }
 
-  void _updateMyHelp(RequestModel requestModel) {
+  _updateMyHelp(RequestModel requestModel) {
     setState(() {
       _myHelpRequest = requestModel;
     });
   }
 
-  void _drawRoute() async {
+  _drawRoute() async {
     if (_isDrawRouter) {
       if (_userNeedHelp == null) {
         mapController.clearCircles();
@@ -381,6 +391,7 @@ class FullMapState extends State<FullMap> {
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     final _createHelpPopup = CreateHelpPopup(userModel: appState.user);
+    print(userSymbol);
     return Scaffold(
       key: _scaffoldKey,
       body: Stack(
@@ -393,34 +404,39 @@ class FullMapState extends State<FullMap> {
                   if (snapshot.hasData) {
                     RequestModel userNeedHelp;
                     RequestModel myHelp;
-                    mapController?.clearSymbols();
-                    snapshot.data.docs.forEach((data) {
-                      RequestModel newRequest = RequestModel.fromDocument(data);
+                    //mapController?.clearSymbols();
+                    var newListRequest = snapshot.data.docs
+                        .map((e) => RequestModel.fromDocument(e));
+
+                    userSymbol.removeWhere((key, value) {
+                      var list = newListRequest
+                          .where((element) => element.userId == key);
+                      if (list.isEmpty) {
+                        _remove(key);
+                        userSymbolData.remove(key);
+                      }
+                      return list.isEmpty;
+                    });
+
+                    newListRequest.forEach((newRequest) {
                       if (newRequest.place != null) {
-                        _add(newRequest.place.location, newRequest.toJson());
-                        // Symbol symbol = (mapController.symbols != null &&
-                        //         mapController.symbols.length > 0)
-                        //     ? mapController.symbols?.firstWhere(
-                        //         (element) =>
-                        //             RequestModel.fromJson(element.data)
-                        //                 .userId ==
-                        //             newRequest.userId,
-                        //         orElse: () => null)
-                        //     : null;
-                        // if (symbol == null)
-                        //   _add(LatLng(newRequest.lat, newRequest.lng),
-                        //       newRequest.toJson());
-                        // else {
-                        //   Map<String, dynamic> requestJson =
-                        //       newRequest.toJson();
-                        //   Map<String, dynamic> symbolDataJson = symbol.data;
-                        //   if (mapEquals(requestJson, symbolDataJson)) {
-                        //   } else {
-                        //     _remove(symbol);
-                        //     _add(LatLng(newRequest.lat, newRequest.lng),
-                        //         newRequest.toJson());
-                        //   }
-                        // }
+                        var oldSymbol = userSymbol[newRequest.userId];
+                        var oldDataJson = userSymbolData[newRequest.userId];
+                        var oldData = oldDataJson != null
+                            ? RequestModel.fromJson(oldDataJson)
+                            : null;
+                        if (oldSymbol != null) {
+                          if (oldData.createAt != newRequest.createAt ||
+                              oldData.status != newRequest.status ||
+                              oldData.helperId != newRequest.helperId) {
+                            _remove(newRequest.userId);
+                            _add(newRequest.place.location, newRequest.toJson(),
+                                newRequest.userId);
+                          }
+                        } else {
+                          _add(newRequest.place.location, newRequest.toJson(),
+                              newRequest.userId);
+                        }
 
                         // Nếu đang trợ giúp ai đó
                         if (newRequest.helperId == appState.user.userId &&
@@ -517,7 +533,7 @@ class FullMapState extends State<FullMap> {
         onClose: () => print('DIAL CLOSED'),
         tooltip: 'Chức năng',
         heroTag: 'speed-dial-hero-tag',
-        backgroundColor: Colors.green,
+        backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         elevation: 8.0,
         shape: CircleBorder(),
@@ -560,11 +576,11 @@ class FullMapState extends State<FullMap> {
                     alertBorder: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                       side: BorderSide(
-                        color: Colors.green,
+                        color: Theme.of(context).primaryColor,
                       ),
                     ),
                     titleStyle: TextStyle(
-                      color: Colors.green,
+                      color: Theme.of(context).primaryColor,
                     ),
                     alertAlignment: Alignment.center,
                   ),
@@ -587,7 +603,10 @@ class FullMapState extends State<FullMap> {
                               context: context,
                               title: "Thông báo",
                               type: AlertType.success,
-                              style: AlertStyle(isCloseButton: false),
+                              style: AlertStyle(
+                                  isCloseButton: false,
+                                  titleStyle: TextStyle(
+                                      color: Theme.of(context).primaryColor)),
                               content: Text('Tạo yêu cầu trợ giúp thành công'),
                               buttons: [
                                 DialogButton(
@@ -598,14 +617,18 @@ class FullMapState extends State<FullMap> {
                                     ),
                                     onPressed: () =>
                                         Navigator.of(context).pop(),
-                                    color: Colors.green)
+                                    color: Theme.of(context).primaryColor)
                               ],
                             ).show();
                           }).catchError((error) => Alert(
                                       context: context,
                                       title: "Thông báo",
                                       type: AlertType.error,
-                                      style: AlertStyle(isCloseButton: false),
+                                      style: AlertStyle(
+                                          isCloseButton: false,
+                                          titleStyle: TextStyle(
+                                              color: Theme.of(context)
+                                                  .primaryColor)),
                                       content: Text(
                                           'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
                                       buttons: [
@@ -627,7 +650,7 @@ class FullMapState extends State<FullMap> {
                         "Tạo yêu cầu",
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
-                      color: Colors.green,
+                      color: Theme.of(context).primaryColor,
                     )
                   ]).show();
             },

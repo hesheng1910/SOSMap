@@ -112,7 +112,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.people,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
@@ -129,7 +129,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.phone,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
@@ -146,7 +146,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.star,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
@@ -164,12 +164,13 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.money,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
-                                    text:
-                                        " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
+                                    text: widget.helpRequest.price != null
+                                        ? " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ"
+                                        : " Miễn phí",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -193,9 +194,16 @@ class _HelpInfoState extends State<HelpInfo> {
                               rate: 5,
                               reviewMessage: null));
                       Alert(
-                          style: AlertStyle(animationType: AnimationType.grow),
+                          style: AlertStyle(
+                              animationType: AnimationType.grow,
+                              titleStyle: TextStyle(
+                                  color: Theme.of(context).primaryColor)),
                           context: context,
                           title: "XÁC NHẬN HOÀN THÀNH TRỢ GIÚP",
+                          closeIcon: Icon(
+                            Icons.close,
+                            color: Colors.red,
+                          ),
                           content: ratingCard,
                           buttons: [
                             DialogButton(
@@ -237,12 +245,13 @@ class _HelpInfoState extends State<HelpInfo> {
                                 }
                                 Navigator.pop(context);
                               },
-                              color: Colors.green,
+                              color: Theme.of(context).primaryColor,
                             )
                           ]).show();
                     },
                     style: TextButton.styleFrom(
-                        primary: Colors.white, backgroundColor: Colors.green),
+                        primary: Colors.white,
+                        backgroundColor: Theme.of(context).primaryColor),
                     child: const Text('HOÀN THÀNH'),
                   ),
                 ],
@@ -294,12 +303,13 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.money,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
-                                    text:
-                                        " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
+                                    text: widget.helpRequest.price == null
+                                        ? " Miễn phí"
+                                        : " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -311,11 +321,12 @@ class _HelpInfoState extends State<HelpInfo> {
                               child: Icon(
                                 Icons.warning,
                                 size: 16,
-                                color: Colors.green,
+                                color: Theme.of(context).primaryColor,
                               ),
                             ),
                             TextSpan(
-                                text: " ${widget.helpRequest?.reason}",
+                                text:
+                                    " ${widget.helpRequest?.reason ?? "Khác"}",
                                 style: TextStyle(
                                     color: Colors.black, fontSize: 16)),
                           ])),
@@ -328,11 +339,12 @@ class _HelpInfoState extends State<HelpInfo> {
                                   child: Icon(
                                     Icons.message,
                                     size: 16,
-                                    color: Colors.green,
+                                    color: Theme.of(context).primaryColor,
                                   ),
                                 ),
                                 TextSpan(
-                                    text: " ${widget.helpRequest?.message}",
+                                    text:
+                                        " ${widget.helpRequest?.message ?? ""}",
                                     style: TextStyle(
                                         color: Colors.black, fontSize: 16)),
                               ],
@@ -354,8 +366,14 @@ class _HelpInfoState extends State<HelpInfo> {
                               content:
                                   Text('Bạn muốn huỷ yêu cầu trợ giúp chứ ?'),
                               type: AlertType.warning,
-                              style:
-                                  AlertStyle(animationType: AnimationType.grow),
+                              closeIcon: Icon(
+                                Icons.close,
+                                color: Colors.red,
+                              ),
+                              style: AlertStyle(
+                                  animationType: AnimationType.grow,
+                                  titleStyle: TextStyle(
+                                      color: Theme.of(context).primaryColor)),
                               buttons: [
                                 DialogButton(
                                   child: Text(
@@ -367,7 +385,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                         widget.helpRequest.userId);
                                     Navigator.of(context).pop();
                                   },
-                                  color: Colors.green,
+                                  color: Theme.of(context).primaryColor,
                                 )
                               ],
                               context: context)
@@ -430,7 +448,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                     child: Icon(
                                       Icons.people,
                                       size: 16,
-                                      color: Colors.green,
+                                      color: Theme.of(context).primaryColor,
                                     ),
                                   ),
                                   TextSpan(
@@ -447,7 +465,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                     child: Icon(
                                       Icons.phone,
                                       size: 16,
-                                      color: Colors.green,
+                                      color: Theme.of(context).primaryColor,
                                     ),
                                   ),
                                   TextSpan(
@@ -464,7 +482,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                     child: Icon(
                                       Icons.star,
                                       size: 16,
-                                      color: Colors.green,
+                                      color: Theme.of(context).primaryColor,
                                     ),
                                   ),
                                   TextSpan(
@@ -481,12 +499,13 @@ class _HelpInfoState extends State<HelpInfo> {
                                     child: Icon(
                                       Icons.money,
                                       size: 16,
-                                      color: Colors.green,
+                                      color: Theme.of(context).primaryColor,
                                     ),
                                   ),
                                   TextSpan(
-                                      text:
-                                          " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
+                                      text: widget.helpRequest.price == null
+                                          ? " Miễn phí"
+                                          : " ${formatter.format(int.parse(widget.helpRequest.price ?? "0"))} VNĐ",
                                       style: TextStyle(
                                           color: Colors.black, fontSize: 16)),
                                 ],
@@ -521,7 +540,7 @@ class _HelpInfoState extends State<HelpInfo> {
                         },
                         style: TextButton.styleFrom(
                             primary: Colors.white,
-                            backgroundColor: Colors.green),
+                            backgroundColor: Theme.of(context).primaryColor),
                         child: const Text('CHỈ ĐƯỜNG'),
                       ),
                   ],
@@ -598,7 +617,7 @@ class _HelpInfoState extends State<HelpInfo> {
                             fontSize: 16),
                       ),
                       TextSpan(
-                        text: " ${widget.helpRequest.message}",
+                        text: " ${widget.helpRequest.message ?? ""}",
                         style: TextStyle(color: Colors.black, fontSize: 16),
                       )
                     ],

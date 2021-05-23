@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:sosmap/ui/screens/history.dart';
 import 'package:sosmap/ui/screens/login_page.dart';
+import 'package:sosmap/ui/screens/profile.dart';
 import 'package:sosmap/ui/screens/signup_page.dart';
 
 import 'package:sosmap/util/state_widget.dart';
@@ -66,6 +67,7 @@ class Home extends StatelessWidget {
         '/login-page': (context) => LoginPageFourteen(),
         '/signup-page': (context) => SignupThreePage(),
         '/history': (context) => HistoryScreen(),
+        '/profile': (context) => ProfilePage(),
         '/home': (context) => HomeScreen()
       },
     );

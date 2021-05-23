@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:sosmap/models/state.dart';
@@ -20,15 +21,15 @@ class _HomeScreenState extends State<HomeScreen>
   TabController _tabController;
   var _tabItems = <TabItem>[
     TabItem(
-      icon: Icon(Icons.map),
+      icon: Icon(CupertinoIcons.map_fill),
       title: 'Bản đồ',
     ),
     TabItem(
-      icon: Icon(Icons.history),
+      icon: Icon(CupertinoIcons.square_favorites_alt_fill),
       title: 'Lịch sử',
     ),
     TabItem(
-      icon: Icon(Icons.person),
+      icon: Icon(CupertinoIcons.profile_circled),
       title: 'Hồ sơ',
     ),
   ];
@@ -55,6 +56,11 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  final List<Widget> _widgetOptions = <Widget>[
+    FullMap(),
+    HistoryScreen(),
+    ProfilePage(),
+  ];
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
     if (appState == null) return SignInScreen();
@@ -68,12 +74,6 @@ class _HomeScreenState extends State<HomeScreen>
       } else {
         _loadingVisible = false;
       }
-
-      final List<Widget> _widgetOptions = <Widget>[
-        FullMap(),
-        HistoryScreen(),
-        ProfilePage(),
-      ];
       return Scaffold(
         backgroundColor: Colors.white,
         body: LoadingScreen(
@@ -86,15 +86,13 @@ class _HomeScreenState extends State<HomeScreen>
         bottomNavigationBar: ConvexAppBar(
           items: _tabItems,
           initialActiveIndex: _selectedIndex,
-          style: TabStyle.textIn,
-          curve: Curves.bounceInOut,
           controller: _tabController,
           backgroundColor: Theme.of(context).primaryColor,
-          gradient: RadialGradient(
-            center: const Alignment(0, 0), // near the top right
-            radius: 5,
-            colors: [Colors.green, Colors.blue, Colors.redAccent],
-          ),
+          // gradient: RadialGradient(
+          //   center: const Alignment(0, 0), // near the top right
+          //   radius: 5,
+          //   colors: [Colors.green, Colors.blue, Colors.redAccent],
+          // ),
           onTap: _onItemTapped,
         ),
       );

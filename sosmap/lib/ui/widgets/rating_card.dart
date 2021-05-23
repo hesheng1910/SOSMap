@@ -58,7 +58,7 @@ class _RatingCardState extends State<RatingCard> {
                 case 4:
                   return Icon(
                     Icons.sentiment_very_satisfied,
-                    color: Colors.green,
+                    color: Theme.of(context).primaryColor,
                   );
               }
             },
@@ -76,9 +76,9 @@ class _RatingCardState extends State<RatingCard> {
                 'Đánh giá của bạn sẽ được hiện trong hồ sơ của người giúp',
             helperMaxLines: 2,
             labelText: 'Viết đánh giá',
-            prefixIcon: const Icon(
+            prefixIcon: Icon(
               Icons.rate_review,
-              color: Colors.green,
+              color: Theme.of(context).primaryColor,
             ),
           ),
           minLines: 1,

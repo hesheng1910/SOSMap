@@ -169,7 +169,7 @@ class CreateHelpPopup extends StatelessWidget {
                 suffixText: 'VND',
                 hintText: 'Miễn phí',
                 hintStyle: const TextStyle(color: Colors.grey),
-                suffixStyle: const TextStyle(color: Colors.green)),
+                suffixStyle: TextStyle(color: Theme.of(context).primaryColor)),
             controller: _typeMoneyController,
             keyboardType: TextInputType.number,
             maxLength: 11,

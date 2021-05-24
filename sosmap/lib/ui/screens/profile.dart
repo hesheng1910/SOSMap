@@ -181,8 +181,12 @@ class MapScreenState extends State<ProfilePage>
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
     setState(() {
-      _imageFile = File(pickedFile.path);
-      uploadImageToFirebase();
+      if (pickedFile != null) {
+        _imageFile = File(pickedFile.path);
+        uploadImageToFirebase();
+      } else {
+        print('No image selected.');
+      }
     });
   }
 
@@ -196,10 +200,10 @@ class MapScreenState extends State<ProfilePage>
     await taskSnapshot.ref.getDownloadURL().then((value) => {
           imageUrl = value,
           Auth.updateAvatarUserFirestore(currentUser.uid, imageUrl),
+          setState(() {
+            _avatarUrl = imageUrl;
+          })
         });
-    setState(() {
-      _avatarUrl = imageUrl;
-    });
   }
 
   ScreenProfileArguments args;

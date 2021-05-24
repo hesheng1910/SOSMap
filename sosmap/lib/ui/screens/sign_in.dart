@@ -131,7 +131,7 @@ class _SignInScreenState extends State<SignInScreen> {
         style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, '/forgot-password');
+        Navigator.pushReplacementNamed(context, '/forgot-password');
       },
     );
 
@@ -141,7 +141,7 @@ class _SignInScreenState extends State<SignInScreen> {
         style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, '/signup');
+        Navigator.pushReplacementNamed(context, '/signup');
       },
     );
 
@@ -192,7 +192,7 @@ class _SignInScreenState extends State<SignInScreen> {
         await _changeLoadingVisible();
         //need await so it has chance to go through error if found.
         await StateWidget.of(context).logInUser(email, password);
-        await Navigator.pushNamed(context, '/');
+        await Navigator.pushReplacementNamed(context, '/');
       } catch (e) {
         _changeLoadingVisible();
         print("Đăng nhập không thành công: $e");

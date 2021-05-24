@@ -252,7 +252,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, '/signin');
+        Navigator.pushReplacementNamed(context, '/signin');
       },
     );
 
@@ -319,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
         //now automatically login user too
         //await StateWidget.of(context).logInUser(email, password);
-        await Navigator.pushNamed(context, '/signin');
+        await Navigator.pushReplacementNamed(context, '/signin');
       } catch (e) {
         _changeLoadingVisible();
         print("Đăng ký không thành công: $e");

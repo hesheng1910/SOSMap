@@ -16,6 +16,7 @@ import 'package:sosmap/util/request.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/wemap/route.dart';
 import 'package:wemapgl/wemapgl.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
@@ -48,7 +49,7 @@ class FullMapState extends State<FullMap> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   WeMapDirections directionAPI = WeMapDirections();
 
-  Stream<QuerySnapshot> listRequest;
+  //Stream<QuerySnapshot> listRequest;
   bool _isDrawRouter = false;
   RequestModel _userNeedHelp;
   RequestModel _myHelpRequest;
@@ -65,7 +66,6 @@ class FullMapState extends State<FullMap> {
   @override
   void initState() {
     initTokenFCM();
-
     _position = _kInitialPosition;
     _isMoving = true;
     weMap = WeMap(
@@ -141,7 +141,8 @@ class FullMapState extends State<FullMap> {
   }
 
   _updateSelectedSymbol(SymbolOptions changes) {
-    mapController.updateSymbol(_selectedSymbol, changes);
+    if (_selectedSymbol != null)
+      mapController.updateSymbol(_selectedSymbol, changes);
   }
 
   _add(LatLng latlng, Map<String, dynamic> requestData, String uid) async {
@@ -347,7 +348,9 @@ class FullMapState extends State<FullMap> {
         children: <Widget>[
           if (weMap != null)
             StreamBuilder<QuerySnapshot>(
-                stream: listRequest,
+                stream: FirebaseFirestore.instance
+                    .collection('requests')
+                    .snapshots(),
                 builder: (BuildContext context,
                     AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
@@ -548,50 +551,69 @@ class FullMapState extends State<FullMap> {
                             sendNotificationCreateHelp(
                                 _createHelpPopup.requestModel);
                             Navigator.of(context).pop();
-                            Alert(
-                              context: context,
-                              title: "Thông báo",
-                              type: AlertType.success,
-                              style: AlertStyle(
-                                  isCloseButton: false,
-                                  titleStyle: TextStyle(
-                                      color: Theme.of(context).primaryColor)),
-                              content: Text('Tạo yêu cầu trợ giúp thành công'),
-                              buttons: [
-                                DialogButton(
-                                    child: Text(
-                                      'Đóng',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 16),
-                                    ),
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    color: Theme.of(context).primaryColor)
-                              ],
-                            ).show();
-                          }).catchError((error) => Alert(
-                                      context: context,
-                                      title: "Thông báo",
-                                      type: AlertType.error,
-                                      style: AlertStyle(
-                                          isCloseButton: false,
-                                          titleStyle: TextStyle(
-                                              color: Theme.of(context)
-                                                  .primaryColor)),
-                                      content: Text(
-                                          'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
-                                      buttons: [
-                                        DialogButton(
-                                            child: Text(
-                                              'Đóng',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 16),
-                                            ),
-                                            onPressed: () =>
-                                                Navigator.of(context).pop(),
-                                            color: Colors.red)
-                                      ]).show());
+                            Fluttertoast.showToast(
+                                msg: "Tạo yêu cầu trợ giúp thành công",
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.CENTER,
+                                timeInSecForIos: 1,
+                                backgroundColor: Theme.of(context).primaryColor,
+                                textColor: Colors.white,
+                                fontSize: 16.0);
+                            // Alert(
+                            //   context: context,
+                            //   title: "Thông báo",
+                            //   type: AlertType.success,
+                            //   style: AlertStyle(
+                            //       isCloseButton: false,
+                            //       overlayColor: Colors.black54,
+                            //       titleStyle: TextStyle(
+                            //           color: Theme.of(context).primaryColor)),
+                            //   content: Text('Tạo yêu cầu trợ giúp thành công'),
+                            //   buttons: [
+                            //     DialogButton(
+                            //         child: Text(
+                            //           'Đóng',
+                            //           style: TextStyle(
+                            //               color: Colors.white, fontSize: 16),
+                            //         ),
+                            //         onPressed: () =>
+                            //             Navigator.of(context).pop(),
+                            //         color: Theme.of(context).primaryColor)
+                            //   ],
+                            // ).show();
+                          }).catchError((error) =>
+                                  // Alert(
+                                  //             context: context,
+                                  //             title: "Thông báo",
+                                  //             type: AlertType.error,
+                                  //             style: AlertStyle(
+                                  //                 isCloseButton: false,
+                                  //                 overlayColor: Colors.black54,
+                                  //                 titleStyle: TextStyle(
+                                  //                     color: Theme.of(context)
+                                  //                         .primaryColor)),
+                                  //             content: Text(
+                                  //                 'Tạo yêu cầu trợ giúp thất bại. Lý do: $error'),
+                                  //             buttons: [
+                                  //               DialogButton(
+                                  //                   child: Text(
+                                  //                     'Đóng',
+                                  //                     style: TextStyle(
+                                  //                         color: Colors.white,
+                                  //                         fontSize: 16),
+                                  //                   ),
+                                  //                   onPressed: () =>
+                                  //                       Navigator.of(context).pop(),
+                                  //                   color: Colors.red)
+                                  //             ]).show()
+                                  Fluttertoast.showToast(
+                                      msg: "Tạo yêu cầu thất bại",
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.CENTER,
+                                      timeInSecForIos: 1,
+                                      backgroundColor: Colors.red,
+                                      textColor: Colors.white,
+                                      fontSize: 16.0));
                           //RequestAPI.addRequestDB(_createHelpPopup.requestModel)
                         }
                       },

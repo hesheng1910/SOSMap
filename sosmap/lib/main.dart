@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_app_badger/flutter_app_badger.dart';
+import 'package:overlay_support/overlay_support.dart';
 import 'package:sosmap/ui/screens/history.dart';
 import 'package:sosmap/ui/screens/login_page.dart';
 import 'package:sosmap/ui/screens/profile.dart';
@@ -52,10 +53,13 @@ class Splash extends StatelessWidget {
 }
 
 class Home extends StatelessWidget {
-  
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return OverlaySupport.global(
+        child: MaterialApp(
+      //key: _scaffoldKey,
       title: 'SOSMap',
       theme: buildTheme(),
       //onGenerateRoute: Navigation.router.generator,
@@ -72,7 +76,7 @@ class Home extends StatelessWidget {
         '/profile': (context) => ProfilePage(),
         '/home': (context) => HomeScreen()
       },
-    );
+    ));
   }
 }
 
@@ -136,7 +140,7 @@ void main() async {
     badge: true,
     sound: true,
   );
-     
+
   StateWidget stateWidget = new StateWidget(
     child: new MyApp(),
   );

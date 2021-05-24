@@ -195,6 +195,7 @@ class _HelpInfoState extends State<HelpInfo> {
                               reviewMessage: null));
                       Alert(
                           style: AlertStyle(
+                              overlayColor: Colors.black54,
                               animationType: AnimationType.grow,
                               titleStyle: TextStyle(
                                   color: Theme.of(context).primaryColor)),
@@ -214,6 +215,7 @@ class _HelpInfoState extends State<HelpInfo> {
                               onPressed: () async {
                                 ratingCard.reportModel.createAt =
                                     Timestamp.now();
+                                // update report cho người dc giúp
                                 if (widget.helpRequest.userId != null) {
                                   ListReportModel listReportModel =
                                       await ReportAPI.getListReportFirestore(
@@ -227,22 +229,39 @@ class _HelpInfoState extends State<HelpInfo> {
                                     ];
                                   else
                                     listReportModel.listReport
-                                        .add(ratingCard.reportModel);
+                                        .insert(0, ratingCard.reportModel);
                                   await ReportAPI.addReportDB(listReportModel);
                                   await RequestAPI.deleteRequestDB(
                                       widget.helpRequest.userId);
 
                                   // cập nhật rate user
                                   setState(() {
-                                    _userHelp.rate = (_userHelp.rate ??
-                                            5.0 +
-                                                ratingCard.reportModel.rate
-                                                    .toDouble()) /
+                                    _userHelp.rate = ((_userHelp.rate ?? 5.0) +
+                                            ratingCard.reportModel.rate
+                                                .toDouble()) /
                                         2;
                                   });
 
                                   Auth.updateUser(_userHelp);
                                 }
+                                // update report cho người giúp
+                                if (widget.helpRequest.helperId != null) {
+                                  ListReportModel listReportModel =
+                                      await ReportAPI.getListReportFirestore(
+                                          widget.helpRequest.helperId);
+                                  if (listReportModel == null)
+                                    listReportModel = new ListReportModel(
+                                        userId: widget.helpRequest.helperId);
+                                  if (listReportModel.listReport == null)
+                                    listReportModel.listReport = [
+                                      ratingCard.reportModel
+                                    ];
+                                  else
+                                    listReportModel.listReport
+                                        .insert(0, ratingCard.reportModel);
+                                  await ReportAPI.addReportDB(listReportModel);
+                                }
+
                                 Navigator.pop(context);
                               },
                               color: Theme.of(context).primaryColor,
@@ -371,6 +390,7 @@ class _HelpInfoState extends State<HelpInfo> {
                                 color: Colors.red,
                               ),
                               style: AlertStyle(
+                                  overlayColor: Colors.black54,
                                   animationType: AnimationType.grow,
                                   titleStyle: TextStyle(
                                       color: Theme.of(context).primaryColor)),

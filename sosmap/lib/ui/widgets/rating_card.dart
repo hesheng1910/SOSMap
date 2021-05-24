@@ -1,10 +1,7 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:sosmap/models/report.dart';
 import 'package:sosmap/models/request.dart';
-import 'package:sosmap/models/user.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:sosmap/util/auth.dart';
 
 class RatingCard extends StatefulWidget {
   RatingCard({
@@ -13,7 +10,6 @@ class RatingCard extends StatefulWidget {
     this.reportModel,
   }) : super(key: key);
   final RequestModel requestModel;
-
   ReportModel reportModel;
   @override
   _RatingCardState createState() => _RatingCardState();

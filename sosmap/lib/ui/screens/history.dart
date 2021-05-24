@@ -30,6 +30,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _onRefresh() async {
     // monitor network fetch
+    setState(() {});
     await getListReport();
     // if failed,use refreshFailed()
     _refreshController.refreshCompleted();
@@ -37,13 +38,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _onLoading() async {
     // monitor network fetch
+    setState(() {});
     await getListReport();
     // if failed,use loadFailed(),if no data return,use LoadNodata()
 
     _refreshController.loadComplete();
   }
 
-  getListReport() async {
+  Future<List<ReportModel>> getListReport() async {
     if (appState.user.userId != null) {
       ListReportModel result =
           await ReportAPI.getListReportFirestore(appState.user.userId);
@@ -52,9 +54,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return null;
   }
 
-  getAvatarUrl(String uid) async {
+  Future<UserModel> getUser(String uid) async {
     UserModel userModel = await Auth.getUserFirestore(uid);
-    return userModel.avatarUrl;
+    return userModel;
   }
 
   String readTimestamp(int timestamp) {
@@ -85,7 +87,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Những người đã giúp bạn',
+            'Lịch sử trợ giúp',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Theme.of(context).primaryColor,
@@ -101,12 +103,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
             return SmartRefresher(
                 enablePullDown: true,
                 enablePullUp: true,
-                header: WaterDropHeader(),
+                header: WaterDropMaterialHeader(),
                 footer: CustomFooter(
                   builder: (BuildContext context, LoadStatus mode) {
                     Widget body;
                     if (mode == LoadStatus.idle) {
-                      body = Text("Kéo xuống để làm mới");
+                      body = Text("Kéo xuống để tải thêm");
                     } else if (mode == LoadStatus.loading) {
                       body = CupertinoActivityIndicator();
                     } else if (mode == LoadStatus.failed) {
@@ -126,217 +128,246 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 onRefresh: _onRefresh,
                 onLoading: _onLoading,
                 child: ListView.builder(
-                  itemCount: snapshot?.data?.length ?? 0,
-                  itemBuilder: (context, index) {
-                    ReportModel report = snapshot.data[index];
-                    return ListTile(
-                      title: Text(report.request.name),
-                      subtitle: Text(readTimestamp(
-                          report.createAt.millisecondsSinceEpoch)),
-                      leading: FutureBuilder(
-                        future: getAvatarUrl(report.request.userId),
-                        builder: (context, snap) {
+                    itemCount: snapshot?.data?.length ?? 0,
+                    itemBuilder: (context, index) {
+                      ReportModel report = snapshot.data[index];
+                      return FutureBuilder<UserModel>(
+                        future: getUser(report.request.helperId),
+                        builder: (context, AsyncSnapshot<UserModel> snap) {
                           if (snap.hasData) {
-                            return CircleAvatar(
-                              backgroundImage: NetworkImage(snap.data),
-                              backgroundColor: Colors.transparent,
-                            );
-                          } else
-                            return CircleAvatar(
-                              backgroundImage:
-                                  AssetImage('assets/images/as.png'),
-                              backgroundColor: Colors.transparent,
-                            );
-                        },
-                      ),
-                      trailing: RateStar(
-                        rateScore: report.rate.toDouble(),
-                      ),
-                      onTap: () {
-                        Alert(
-                          title: "CHI TIẾT",
-                          context: context,
-                          style: AlertStyle(
-                            isCloseButton: true,
-                            isButtonVisible: false,
-                            animationType: AnimationType.grow,
-                            titleStyle: TextStyle(
-                                color: Theme.of(context).primaryColor),
-                          ),
-                          closeIcon: Icon(
-                            Icons.close,
-                            color: Colors.red,
-                          ),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ListTile(
-                                  leading: FutureBuilder(
-                                    future: getAvatarUrl(report.request.userId),
-                                    builder: (context, snap) {
-                                      if (snap.hasData)
-                                        return CircleAvatar(
-                                          backgroundImage:
-                                              NetworkImage(snap.data),
-                                          backgroundColor: Colors.transparent,
-                                        );
-                                      else
-                                        return CircleAvatar(
-                                          backgroundImage: AssetImage(
-                                              'assets/images/as.png'),
-                                          backgroundColor: Colors.transparent,
-                                        );
-                                    },
-                                  ),
-                                  title: InkWell(
-                                      child: Text(
-                                        "${report?.request?.name ?? ""}",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            fontSize: 16),
-                                      ),
-                                      onTap: () {
-                                        Navigator.pushNamed(context, '/profile',
-                                            arguments: ScreenProfileArguments(
-                                                report.request.userId));
-                                      }),
-                                  subtitle: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        report.request.status == null
-                                            ? 'Chưa có ai trợ giúp'
-                                            : 'Đã được trợ giúp',
-                                        style: TextStyle(
-                                            color: report.request.status == null
-                                                ? Colors.red
-                                                : Theme.of(context)
-                                                    .primaryColor,
-                                            fontSize: 15),
-                                      ),
-                                    ],
-                                  )),
-                              Divider(
-                                color: Colors.grey,
-                                indent: 0,
-                                endIndent: 0,
+                            bool isHelper =
+                                snap.data.userId == appState.user.userId;
+                            return ListTile(
+                              title: RichText(
+                                text: TextSpan(
+                                  children: [
+                                    WidgetSpan(
+                                      child: isHelper
+                                          ? Icon(
+                                              CupertinoIcons
+                                                  .arrowshape_turn_up_right_circle_fill,
+                                              size: 18,
+                                              color: Theme.of(context)
+                                                  .primaryColor,
+                                            )
+                                          : Icon(
+                                              CupertinoIcons
+                                                  .arrowshape_turn_up_left_circle_fill,
+                                              size: 18,
+                                              color: Colors.orange,
+                                            ),
+                                    ),
+                                    TextSpan(
+                                        text: snap.data.fullName,
+                                        style: TextStyle(color: Colors.black)),
+                                  ],
+                                ),
                               ),
-                              Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(5, 10, 15, 0),
-                                  child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        RichText(
-                                            text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Lý do:",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16),
-                                            ),
-                                            TextSpan(
-                                              text:
-                                                  " ${report?.request?.reason ?? "Khác"}",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16),
-                                            )
-                                          ],
-                                        )),
-                                        SizedBox(height: 10),
-                                        RichText(
-                                            text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Lời nhắn:",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16),
-                                            ),
-                                            TextSpan(
-                                              text:
-                                                  " ${report?.request?.message ?? ""}",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16),
-                                            )
-                                          ],
-                                        )),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
-                                        Divider(
-                                          color: Colors.grey,
-                                          indent: 0,
-                                          endIndent: 0,
-                                        ),
-                                        RichText(
-                                            text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Đánh giá:",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16),
-                                            ),
-                                            TextSpan(
-                                              text: " ${report?.rate ?? "5"} ",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16),
-                                            ),
-                                            WidgetSpan(
-                                              child: Icon(
-                                                Icons.star,
-                                                size: 16,
-                                                color: Colors.orange,
+                              subtitle: Text(readTimestamp(
+                                  report.createAt.millisecondsSinceEpoch)),
+                              leading: CircleAvatar(
+                                backgroundImage: snap.data.avatarUrl == null
+                                    ? AssetImage('assets/images/as.png')
+                                    : NetworkImage(snap.data.avatarUrl),
+                                backgroundColor: Colors.transparent,
+                              ),
+                              trailing: RateStar(
+                                rateScore: report.rate.toDouble(),
+                              ),
+                              onTap: () {
+                                Alert(
+                                  title: "CHI TIẾT",
+                                  context: context,
+                                  style: AlertStyle(
+                                    isCloseButton: true,
+                                    isButtonVisible: false,
+                                    animationType: AnimationType.grow,
+                                    overlayColor: Colors.black54,
+                                    titleStyle: TextStyle(
+                                        color: Theme.of(context).primaryColor),
+                                  ),
+                                  closeIcon: Icon(
+                                    Icons.close,
+                                    color: Colors.red,
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ListTile(
+                                          leading: CircleAvatar(
+                                            backgroundImage:
+                                                snap.data.avatarUrl == null
+                                                    ? AssetImage(
+                                                        'assets/images/as.png')
+                                                    : NetworkImage(
+                                                        snap.data.avatarUrl),
+                                            backgroundColor: Colors.transparent,
+                                          ),
+                                          title: InkWell(
+                                              child: Text(
+                                                "${snap?.data?.fullName ?? "Người dùng chưa đặt tên"}",
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 16),
                                               ),
-                                            ),
-                                          ],
-                                        )),
-                                        SizedBox(
-                                          height: 10,
-                                        ),
-                                        RichText(
-                                            text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: "Nhận xét:",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.w500,
-                                                  fontSize: 16),
-                                            ),
-                                            TextSpan(
-                                              text:
-                                                  " ${report?.reviewMessage ?? ""}",
-                                              style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 16),
-                                            )
-                                          ],
-                                        )),
-                                        SizedBox(height: 10),
-                                      ])),
-                            ],
-                          ),
-                        ).show();
-                      },
-                    );
-                  },
-                ));
+                                              onTap: () {
+                                                Navigator.pushNamed(
+                                                    context, '/profile',
+                                                    arguments:
+                                                        ScreenProfileArguments(
+                                                            snap.data.userId));
+                                              }),
+                                          subtitle: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                isHelper
+                                                    ? 'Đã được bạn trợ giúp'
+                                                    : 'Đã trợ giúp bạn',
+                                                style: TextStyle(
+                                                    color: isHelper
+                                                        ? Theme.of(context)
+                                                            .primaryColor
+                                                        : Colors.orange,
+                                                    fontSize: 15),
+                                              ),
+                                            ],
+                                          )),
+                                      Divider(
+                                        color: Colors.grey,
+                                        indent: 0,
+                                        endIndent: 0,
+                                      ),
+                                      Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              5, 10, 15, 0),
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                RichText(
+                                                    text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: "Lý do:",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 16),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          " ${report?.request?.reason ?? "Khác"}",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 16),
+                                                    )
+                                                  ],
+                                                )),
+                                                SizedBox(height: 10),
+                                                RichText(
+                                                    text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: "Lời nhắn:",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 16),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          " ${report?.request?.message ?? ""}",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 16),
+                                                    )
+                                                  ],
+                                                )),
+                                                SizedBox(
+                                                  height: 10,
+                                                ),
+                                                Divider(
+                                                  color: Colors.grey,
+                                                  indent: 0,
+                                                  endIndent: 0,
+                                                ),
+                                                RichText(
+                                                    text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: "Đánh giá:",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 16),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          " ${report?.rate ?? "5"} ",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 16),
+                                                    ),
+                                                    WidgetSpan(
+                                                      child: Icon(
+                                                        Icons.star,
+                                                        size: 16,
+                                                        color: Colors.orange,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )),
+                                                SizedBox(
+                                                  height: 10,
+                                                ),
+                                                RichText(
+                                                    text: TextSpan(
+                                                  children: [
+                                                    TextSpan(
+                                                      text: "Nhận xét:",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize: 16),
+                                                    ),
+                                                    TextSpan(
+                                                      text:
+                                                          " ${report?.reviewMessage ?? ""}",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 16),
+                                                    )
+                                                  ],
+                                                )),
+                                                SizedBox(height: 10),
+                                              ])),
+                                    ],
+                                  ),
+                                ).show();
+                              },
+                            );
+                          } else {
+                            return SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                        },
+                      );
+                    }));
           },
           future: getListReport(),
         )));

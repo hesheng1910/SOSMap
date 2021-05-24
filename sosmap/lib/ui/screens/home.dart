@@ -14,6 +14,7 @@ import 'package:sosmap/ui/widgets/loading.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 import '../../main.dart';
 import 'history.dart';
+import 'package:overlay_support/overlay_support.dart';
 
 class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
@@ -21,9 +22,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
+  GlobalKey _scaffold = GlobalKey();
   StateModel appState;
   bool _loadingVisible = false;
   TabController _tabController;
+  bool hasNoti = false;
   var _tabItems = <TabItem>[
     TabItem(
       icon: Icon(CupertinoIcons.map_fill),
@@ -109,20 +112,28 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ));
           if (message.data.containsKey('type') &&
-              message.data['type'] == 'waiting') {
+              (message.data['type'] == 'waiting' ||
+                  message.data['type'] == 'cancel')) {
             Alert(
-                    context: context,
-                    type: AlertType.success,
-                    title: 'NHẬN ĐƯỢC TRỢ GIÚP',
+                    context: _scaffold.currentContext,
+                    type: message.data['type'] == 'waiting'
+                        ? AlertType.success
+                        : AlertType.error,
+                    title: message.data['type'] == 'waiting'
+                        ? 'NHẬN ĐƯỢC TRỢ GIÚP'
+                        : 'TRỢ GIÚP BỊ HUỶ',
                     closeIcon: Icon(
                       Icons.close,
                       color: Colors.red,
                     ),
                     content: Text(message.notification.body),
                     style: AlertStyle(
-                        isButtonVisible: true,
-                        titleStyle:
-                            TextStyle(color: Theme.of(context).primaryColor)))
+                        isButtonVisible: false,
+                        overlayColor: Colors.black54,
+                        titleStyle: TextStyle(
+                            color: message.data['type'] == 'waiting'
+                                ? Colors.green
+                                : Colors.red)))
                 .show();
           }
         }
@@ -132,26 +143,35 @@ class _HomeScreenState extends State<HomeScreen>
         FlutterAppBadger.removeBadge();
         print('A new onMessageOpenedApp event was published!');
         if (message.data.containsKey('type') &&
-            message.data['type'] == 'waiting') {
+            (message.data['type'] == 'waiting' ||
+                message.data['type'] == 'cancel')) {
           Alert(
-                  context: context,
-                  type: AlertType.success,
-                  title: 'NHẬN ĐƯỢC TRỢ GIÚP',
+                  context: _scaffold.currentContext,
+                  type: message.data['type'] == 'waiting'
+                      ? AlertType.success
+                      : AlertType.error,
+                  title: message.data['type'] == 'waiting'
+                      ? 'NHẬN ĐƯỢC TRỢ GIÚP'
+                      : 'TRỢ GIÚP BỊ HUỶ',
                   closeIcon: Icon(
                     Icons.close,
                     color: Colors.red,
                   ),
                   content: Text(message.notification.body),
                   style: AlertStyle(
-                      isButtonVisible: true,
-                      titleStyle:
-                          TextStyle(color: Theme.of(context).primaryColor)))
+                      isButtonVisible: false,
+                      overlayColor: Colors.black54,
+                      titleStyle: TextStyle(
+                          color: message.data['type'] == 'waiting'
+                              ? Colors.green
+                              : Colors.red)))
               .show();
         }
       });
 
       return Scaffold(
         backgroundColor: Colors.white,
+        key: _scaffold,
         body: LoadingScreen(
           child: IndexedStack(
             children: _widgetOptions,

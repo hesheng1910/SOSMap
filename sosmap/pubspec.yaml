@@ -43,6 +43,7 @@ dependencies:
   pull_to_refresh: ^2.0.0
   convex_bottom_bar: ^3.0.0
   image_picker: ^0.6.7
+  overlay_support: ^1.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

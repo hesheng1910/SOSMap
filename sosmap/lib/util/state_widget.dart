@@ -46,7 +46,8 @@ class _StateWidgetState extends State<StateWidget> {
   Future<Null> initUser() async {
     //print('...initUser...');
     User firebaseUserAuth = await Auth.getCurrentFirebaseUser();
-    UserModel user = await Auth.getUserLocal();
+    if (firebaseUserAuth == null) return null;
+    UserModel user = await Auth.getUserFirestore(firebaseUserAuth.uid);
     SettingModels settings = await Auth.getSettingsLocal();
     setState(() {
       state.isLoading = false;

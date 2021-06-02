@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 //import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:sosmap/models/user.dart';
 import 'package:sosmap/models/settings.dart';
 import 'package:flutter/services.dart';
@@ -31,6 +34,33 @@ class Auth {
         print("user ${user.fullName} ${user.email} exists");
       }
     });
+  }
+
+  static void updateUser(UserModel user) {
+    checkUserExist(user.userId).then((value) {
+      if (!value) {
+        print("Không tồn tại user");
+      } else {
+        print("update user thành công");
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.userId)
+            .update(user.toJson());
+      }
+    });
+  }
+
+  static Future<void> updateLocationUserFirestore(
+      String userId, double lat, double lng) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({'lat': lat, 'lng': lng});
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
   }
 
   static Future<bool> checkUserExist(String userId) async {
@@ -72,6 +102,32 @@ class Auth {
           .doc(userId)
           .get()
           .then((documentSnapshot) => UserModel.fromDocument(documentSnapshot));
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
+  }
+
+  static Future<void> updateUserFirestore(String userId, var data) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'fullName': data['fullName'],
+        'tel': data['telephone'],
+        'email': data['email']
+      });
+    } else {
+      print('firestore userId can not be null');
+      return null;
+    }
+  }
+
+  static Future<void> updateAvatarUserFirestore(
+      String userId, String fileName) async {
+    if (userId != null) {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update({'avatarUrl': fileName});
     } else {
       print('firestore userId can not be null');
       return null;
@@ -147,22 +203,32 @@ class Auth {
     if (e is PlatformException) {
       switch (e.message) {
         case 'There is no user record corresponding to this identifier. The user may have been deleted.':
-          return 'User with this email address not found.';
+          return 'Không tồn tại tài khoản sử dụng Email này.';
           break;
         case 'The password is invalid or the user does not have a password.':
-          return 'Invalid password.';
+          return 'Mật khẩu không hợp lệ.';
           break;
         case 'A network error (such as timeout, interrupted connection or unreachable host) has occurred.':
-          return 'No internet connection.';
+          return 'Không có kết nối mạng.';
           break;
         case 'The email address is already in use by another account.':
-          return 'This email address already has an account.';
+          return 'Email này đã được sử dụng cho một tài khoản khác.';
           break;
         default:
-          return 'Unknown error occured.';
+          return 'Xảy ra lỗi không xác định.';
       }
     } else {
-      return 'Unknown error occured.';
+      return 'Xảy ra lỗi không xác định.';
+    }
+  }
+
+  static UploadTask uploadFile(String destination, File file) {
+    try {
+      final ref = FirebaseStorage.instance.ref(destination);
+
+      return ref.putFile(file);
+    } on FirebaseException catch (e) {
+      return null;
     }
   }
 

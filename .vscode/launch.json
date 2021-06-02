@@ -1,0 +1,26 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "WeMapSDK",
+            "cwd": "WeMapSDK",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "sosmap",
+            "cwd": "sosmap",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "wemapgl_platform_interface",
+            "cwd": "WeMapSDK/wemapgl_platform_interface",
+            "request": "launch",
+            "type": "dart"
+        }
+    ]
+}

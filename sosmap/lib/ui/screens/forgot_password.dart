@@ -29,7 +29,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           radius: 60.0,
           child: ClipOval(
             child: Image.asset(
-              'assets/images/default.png',
+              'assets/images/as.png',
               fit: BoxFit.cover,
               width: 120.0,
               height: 120.0,
@@ -38,43 +38,81 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
 
     final email = TextFormField(
-      keyboardType: TextInputType.emailAddress,
       autofocus: false,
       controller: _email,
+      keyboardType: TextInputType.emailAddress,
       validator: Validator.validateEmail,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.email,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Email',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(5.0),
+            borderSide: new BorderSide(color: Theme.of(context).primaryColor)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
+    // final email = TextFormField(
+    //   keyboardType: TextInputType.emailAddress,
+    //   autofocus: false,
+    //   controller: _email,
+    //   validator: Validator.validateEmail,
+    //   decoration: InputDecoration(
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.email,
+    //         color: Colors.grey,
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Email',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
 
     final forgotPasswordButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+      child: TextButton(
+        style: ButtonStyle(
+          backgroundColor:
+              MaterialStateProperty.all(Colors.white.withOpacity(0.3)),
         ),
         onPressed: () {
           _forgotPassword(email: _email.text, context: context);
         },
-        padding: EdgeInsets.all(12),
-        color: Theme.of(context).primaryColor,
-        child: Text('FORGOT PASSWORD', style: TextStyle(color: Colors.white)),
+        child: Text('ĐẶT LẠI MẬT KHẨU', style: TextStyle(color: Colors.white)),
       ),
     );
 
+    // final forgotPasswordButton = Padding(
+    //   padding: EdgeInsets.symmetric(vertical: 16.0),
+    //   child: RaisedButton(
+    //     shape: RoundedRectangleBorder(
+    //       borderRadius: BorderRadius.circular(24),
+    //     ),
+    //     onPressed: () {
+    //       _forgotPassword(email: _email.text, context: context);
+    //     },
+    //     padding: EdgeInsets.all(12),
+    //     color: Theme.of(context).primaryColor,
+    //     child: Text('QUÊN MẬT KHẨU', style: TextStyle(color: Colors.white)),
+    //   ),
+    // );
+
     final signInLabel = TextButton(
       child: Text(
-        'Sign In',
-        style: TextStyle(color: Colors.black54),
+        'Đăng nhập',
+        style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
         Navigator.pushNamed(context, '/signin');
@@ -82,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromRGBO(0, 144, 74, 1),
       body: LoadingScreen(
           child: Form(
             key: _formKey,
@@ -125,17 +163,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         await Auth.forgotPasswordEmail(email);
         await _changeLoadingVisible();
         Flushbar(
-          title: "Password Reset Email Sent",
+          title: "Gửi mật khẩu đặt lại tài khoản",
           message:
-              'Check your email and follow the instructions to reset your password.',
+              'Kiểm tra Email của bạn và làm theo chỉ dẫn để đặt lại mật khẩu',
           duration: Duration(seconds: 20),
         )..show(context);
       } catch (e) {
         _changeLoadingVisible();
-        print("Forgot Password Error: $e");
+        print("Lỗi đặt lại mật khẩu: $e");
         String exception = Auth.getExceptionText(e);
         Flushbar(
-          title: "Forgot Password Error",
+          title: "Lỗi đặt lại mật khẩu",
           message: exception,
           duration: Duration(seconds: 10),
         )..show(context);

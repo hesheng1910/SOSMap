@@ -31,7 +31,7 @@ class _SignInScreenState extends State<SignInScreen> {
           radius: 60.0,
           child: ClipOval(
             child: Image.asset(
-              'assets/images/default.png',
+              'assets/images/as.png',
               fit: BoxFit.cover,
               width: 120.0,
               height: 120.0,
@@ -39,23 +39,52 @@ class _SignInScreenState extends State<SignInScreen> {
           )),
     );
 
+    // final email = TextFormField(
+    //   style: TextStyle(color: Color.fromRGBO(0, 144, 74, 1)),
+    //   keyboardType: TextInputType.emailAddress,
+    //   autofocus: false,
+    //   controller: _email,
+    //   validator: Validator.validateEmail,
+    //   decoration: InputDecoration(
+    //     hintStyle: TextStyle(color: Color.fromRGBO(0, 144, 74, 1)),
+    //     fillColor: Colors.white,
+    //     filled: true,
+    //     prefixIcon: Padding(
+    //       padding: EdgeInsets.only(left: 5.0),
+    //       child: Icon(
+    //         Icons.email,
+    //         color: Color.fromRGBO(0, 144, 74, 1),
+    //       ), // icon is 48px widget.
+    //     ), // icon is 48px widget.
+    //     hintText: 'Email',
+    //     contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
+    //     border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+    //   ),
+    // );
+
     final email = TextFormField(
-      keyboardType: TextInputType.emailAddress,
       autofocus: false,
       controller: _email,
+      keyboardType: TextInputType.emailAddress,
       validator: Validator.validateEmail,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.email,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
         hintText: 'Email',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(5.0),
+            borderSide: BorderSide(color: Theme.of(context).primaryColor)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
 
     final password = TextFormField(
@@ -64,57 +93,60 @@ class _SignInScreenState extends State<SignInScreen> {
       controller: _password,
       validator: Validator.validatePassword,
       decoration: InputDecoration(
+        filled: true,
+        errorStyle: TextStyle(color: Colors.red.shade900),
+        fillColor: Colors.white,
         prefixIcon: Padding(
           padding: EdgeInsets.only(left: 5.0),
           child: Icon(
             Icons.lock,
-            color: Colors.grey,
           ), // icon is 48px widget.
         ), // icon is 48px widget.
-        hintText: 'Password',
+        hintText: 'Mật khẩu',
         contentPadding: EdgeInsets.fromLTRB(20.0, 10.0, 20.0, 10.0),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(32.0)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(5.0)),
       ),
+      style: TextStyle(color: Theme.of(context).primaryColor),
+      cursorColor: Theme.of(context).primaryColor,
     );
 
     final loginButton = Padding(
       padding: EdgeInsets.symmetric(vertical: 16.0),
-      child: RaisedButton(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
+      child: TextButton(
+        style: ButtonStyle(
+          backgroundColor:
+              MaterialStateProperty.all(Colors.white.withOpacity(0.3)),
         ),
         onPressed: () {
           _emailLogin(
               email: _email.text, password: _password.text, context: context);
         },
-        padding: EdgeInsets.all(12),
-        color: Theme.of(context).primaryColor,
-        child: Text('SIGN IN', style: TextStyle(color: Colors.white)),
+        child: Text('ĐĂNG NHẬP', style: TextStyle(color: Colors.white)),
       ),
     );
 
     final forgotLabel = TextButton(
       child: Text(
-        'Forgot password?',
-        style: TextStyle(color: Colors.black54),
+        'Quên mật khẩu ?',
+        style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, '/forgot-password');
+        Navigator.pushReplacementNamed(context, '/forgot-password');
       },
     );
 
     final signUpLabel = TextButton(
       child: Text(
-        'Create an Account',
-        style: TextStyle(color: Colors.black54),
+        'Đăng ký tài khoản mới',
+        style: TextStyle(color: Colors.white),
       ),
       onPressed: () {
-        Navigator.pushNamed(context, '/signup');
+        Navigator.pushReplacementNamed(context, '/signup');
       },
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Color.fromRGBO(0, 144, 74, 1),
       body: LoadingScreen(
           child: Form(
             key: _formKey,
@@ -160,13 +192,13 @@ class _SignInScreenState extends State<SignInScreen> {
         await _changeLoadingVisible();
         //need await so it has chance to go through error if found.
         await StateWidget.of(context).logInUser(email, password);
-        await Navigator.pushNamed(context, '/');
+        await Navigator.pushReplacementNamed(context, '/');
       } catch (e) {
         _changeLoadingVisible();
-        print("Sign In Error: $e");
+        print("Đăng nhập không thành công: $e");
         String exception = Auth.getExceptionText(e);
         Flushbar(
-          title: "Sign In Error",
+          title: "Đăng nhập không thành công",
           message: exception,
           duration: Duration(seconds: 5),
         )..show(context);

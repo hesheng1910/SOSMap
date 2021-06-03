@@ -8,6 +8,7 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:sosmap/models/state.dart';
 import 'package:sosmap/ui/screens/map.dart';
 import 'package:sosmap/ui/screens/profile.dart';
+import 'package:sosmap/ui/screens/tab_bar.dart';
 import 'package:sosmap/util/state_widget.dart';
 import 'package:sosmap/ui/screens/sign_in.dart';
 import 'package:sosmap/ui/widgets/loading.dart';
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen>
   final List<Widget> _widgetOptions = <Widget>[
     FullMap(),
     HistoryScreen(),
-    ProfilePage(),
+    TabBarProfile(),
   ];
   Widget build(BuildContext context) {
     appState = StateWidget.of(context).state;
